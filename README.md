@@ -1,9 +1,9 @@
 # hoymiles-ms-a2-to-mqtt
 Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery System to MQTT Broker
 
-### Installation
-<details>
-    <summary>Debian</summary>
+## Installation
+
+### Debian
 
 ```shell
 sudo apt-get install python3-virtualenv
@@ -14,7 +14,7 @@ virtualenv -p python3 .venv
 . .venv/bin/activate
 pip3 install -r requirements.txt
 ```
-</details>
+
 
 * modify your configuration (hoymiles-ms-a2-to-mqtt.config) and test it
 ```
