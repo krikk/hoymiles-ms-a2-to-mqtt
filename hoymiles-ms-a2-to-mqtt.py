@@ -141,39 +141,43 @@ def get_sid(token):
         token = request_new_token()
         return None
 
+def get_uri(token, sid):
+    # Step 5: Use the token and sid to get the uri
+    url_sd_uri = "https://neapi.hoymiles.com/pvmc/api/0/station/get_sd_uri_c"
+    headers_with_auth = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': token
+    }
+
+    data_sd_uri = {"sid": sid}
+
+    response_sd_uri = requests.post(url_sd_uri, json=data_sd_uri, headers=headers_with_auth)
+
+    if response_sd_uri.status_code == 200:
+        sd_uri_data = response_sd_uri.json()
+        debug_print(f"SD URI Data Response: {sd_uri_data}")
+
+        if sd_uri_data.get("status") == "0" and "data" in sd_uri_data:
+            uri = sd_uri_data["data"].get("uri")
+            if uri:
+                debug_print(f"URI retrieved: {uri}")
+                save_uri_to_config(uri)  # Save the URI to the config file
+        else:
+            debug_print(f"Failed to retrieve sd_uri data: {sd_uri_data.get('message')}")
+            uri = None  # Reset URI so it gets requested again
+    else:
+        debug_print(f"Failed to fetch sd_uri. Status Code: {response_sd_uri.status_code}")
+        if response_sd_uri.status_code == 400:  # Bad Request, trigger re-request of URI
+            uri = None  # Reset URI so it gets requested again
+    return uri
 
 # Function to handle the final request logic
-def send_final_request():
-    global token, sid, uri
+def send_final_request(token, sid, uri):
+
 
     if token and sid:
         if not uri:  # Only request URI if it is not available in the config
-            # Step 5: Use the token and sid to send the third request
-            url_sd_uri = "https://neapi.hoymiles.com/pvmc/api/0/station/get_sd_uri_c"
-            headers_with_auth = {
-                'Content-Type': 'application/json; charset=utf-8',
-                'Authorization': token
-            }
-
-            data_sd_uri = {"sid": sid}
-
-            response_sd_uri = requests.post(url_sd_uri, json=data_sd_uri, headers=headers_with_auth)
-
-            if response_sd_uri.status_code == 200:
-                sd_uri_data = response_sd_uri.json()
-                debug_print(f"SD URI Data Response: {sd_uri_data}")
-
-                if sd_uri_data.get("status") == "0" and "data" in sd_uri_data:
-                    uri = sd_uri_data["data"].get("uri")
-                    if uri:
-                        debug_print(f"URI retrieved: {uri}")
-                        save_uri_to_config(uri)  # Save the URI to the config file
-                else:
-                    debug_print(f"Failed to retrieve sd_uri data: {sd_uri_data.get('message')}")
-            else:
-                debug_print(f"Failed to fetch sd_uri. Status Code: {response_sd_uri.status_code}")
-                if response_sd_uri.status_code == 400:  # Bad Request, trigger re-request of URI
-                    uri = None  # Reset URI so it gets requested again
+            uri = get_uri(token, sid)
         else:
             debug_print(f"Using cached URI: {uri}")
 
@@ -252,36 +256,6 @@ if not token:
 if token:
     if not sid:
          sid = get_sid (token)
-        # # Use the token to send a request for the SID
-        # url_station = "https://neapi.hoymiles.com/pvmc/api/0/station/select_by_page_c"
-        # headers_with_auth = {
-        #     'Content-Type': 'application/json; charset=utf-8',
-        #     'Authorization': token
-        # }
-
-        # data_station = {
-        #     "page": 1,
-        #     "page_size": 50
-        # }
-
-        # response_station = requests.post(url_station, json=data_station, headers=headers_with_auth)
-
-        # if response_station.status_code == 200:
-        #     station_data = response_station.json()
-        #     debug_print(f"SID retrieved: {station_data}")
-        #     if station_data.get("status") == "0" and "data" in station_data:
-        #         sid = station_data["data"].get("list", [{}])[0].get("sid")
-        #         if sid:
-        #             debug_print(f"SID retrieved: {sid}")
-        #             save_sid_to_config(sid)
-        #         else:
-        #             debug_print("SID not found in station data response.")
-        #     else:
-        #         debug_print(f"Failed to retrieve station data: {station_data.get('message')}")
-        #         token = request_new_token()
-        # else:
-        #     debug_print(f"Failed to fetch station data. Status Code: {response_station.status_code}")
-        #     token = request_new_token()
     else:
         debug_print("SID loaded from config.")
 
@@ -290,7 +264,7 @@ if token:
             while True:
                 # Log the start timestamp
                 print(f"running at: {datetime.now().isoformat()}")
-                send_final_request()
+                send_final_request(token, sid, uri)
                 time.sleep(request_interval_seconds)
 
     except KeyboardInterrupt:
