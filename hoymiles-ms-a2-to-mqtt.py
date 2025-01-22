@@ -105,6 +105,43 @@ def request_new_token():
 
     return None
 
+def get_sid(token):
+    # Use the token to send a request for the SID
+    url_station = "https://neapi.hoymiles.com/pvmc/api/0/station/select_by_page_c"
+    headers_with_auth = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': token
+    }
+
+    data_station = {
+        "page": 1,
+        "page_size": 50
+    }
+
+    response_station = requests.post(url_station, json=data_station, headers=headers_with_auth)
+
+    if response_station.status_code == 200:
+        station_data = response_station.json()
+        debug_print(f"SID retrieved: {station_data}")
+        if station_data.get("status") == "0" and "data" in station_data:
+            sid = station_data["data"].get("list", [{}])[0].get("sid")
+            if sid:
+                debug_print(f"SID retrieved: {sid}")
+                save_sid_to_config(sid)
+                return sid
+            else:
+                debug_print("SID not found in station data response.")
+                return None
+        else:
+            debug_print(f"Failed to retrieve station data: {station_data.get('message')}")
+            token = request_new_token()
+            return None
+    else:
+        debug_print(f"Failed to fetch station data. Status Code: {response_station.status_code}")
+        token = request_new_token()
+        return None
+
+
 # Function to handle the final request logic
 def send_final_request():
     global token, sid, uri
@@ -214,36 +251,37 @@ if not token:
 
 if token:
     if not sid:
-        # Use the token to send a request for the SID
-        url_station = "https://neapi.hoymiles.com/pvmc/api/0/station/select_by_page_c"
-        headers_with_auth = {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': token
-        }
+         sid = get_sid (token)
+        # # Use the token to send a request for the SID
+        # url_station = "https://neapi.hoymiles.com/pvmc/api/0/station/select_by_page_c"
+        # headers_with_auth = {
+        #     'Content-Type': 'application/json; charset=utf-8',
+        #     'Authorization': token
+        # }
 
-        data_station = {
-            "page": 1,
-            "page_size": 50
-        }
+        # data_station = {
+        #     "page": 1,
+        #     "page_size": 50
+        # }
 
-        response_station = requests.post(url_station, json=data_station, headers=headers_with_auth)
+        # response_station = requests.post(url_station, json=data_station, headers=headers_with_auth)
 
-        if response_station.status_code == 200:
-            station_data = response_station.json()
-            debug_print(f"SID retrieved: {station_data}")
-            if station_data.get("status") == "0" and "data" in station_data:
-                sid = station_data["data"].get("list", [{}])[0].get("sid")
-                if sid:
-                    debug_print(f"SID retrieved: {sid}")
-                    save_sid_to_config(sid)
-                else:
-                    debug_print("SID not found in station data response.")
-            else:
-                debug_print(f"Failed to retrieve station data: {station_data.get('message')}")
-                token = request_new_token()
-        else:
-            debug_print(f"Failed to fetch station data. Status Code: {response_station.status_code}")
-            token = request_new_token()
+        # if response_station.status_code == 200:
+        #     station_data = response_station.json()
+        #     debug_print(f"SID retrieved: {station_data}")
+        #     if station_data.get("status") == "0" and "data" in station_data:
+        #         sid = station_data["data"].get("list", [{}])[0].get("sid")
+        #         if sid:
+        #             debug_print(f"SID retrieved: {sid}")
+        #             save_sid_to_config(sid)
+        #         else:
+        #             debug_print("SID not found in station data response.")
+        #     else:
+        #         debug_print(f"Failed to retrieve station data: {station_data.get('message')}")
+        #         token = request_new_token()
+        # else:
+        #     debug_print(f"Failed to fetch station data. Status Code: {response_station.status_code}")
+        #     token = request_new_token()
     else:
         debug_print("SID loaded from config.")
 
