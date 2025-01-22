@@ -15,3 +15,8 @@ virtualenv -p python3 .venv
 pip3 install -r requirements.txt
 ```
 </details>
+
+* modify your configuration (hoymiles-ms-a2-to-mqtt.config) and test it
+```
+./hoymiles-ms-a2-to-mqtt.py
+```
