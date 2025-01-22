@@ -1,6 +1,12 @@
 # hoymiles-ms-a2-to-mqtt
 Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery System to MQTT Broker
 
+## Features
+- Login to Hoymiles Cloud to get Token and cache it
+- with the Token get the sid and cache it
+- with  the token and the sid get the uri and cache it
+- with the Token and the uri we can get the JSON data (which will be directly published to mqtt) with the SOC and power values, as long as the uri is valid
+
 ## Installation
 
 ### Debian
