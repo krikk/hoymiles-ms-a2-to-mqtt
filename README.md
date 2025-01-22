@@ -37,3 +37,16 @@ pip3 install -r requirements.txt
 ```
 ./hoymiles-ms-a2-to-mqtt.py
 ```
+
+#### Install as systemd service (untested)
+Debian
+```
+cp /opt/hoymiles-ms-a2-to-mqtt/hoymiles-ms-a2-to-mqtt.service /etc/systemd/system
+```
+
+
+```
+systemctl daemon-reload
+systemctl start hoymiles-ms-a2-to-mqtt
+systemctl enable hoymiles-ms-a2-to-mqtt
+```
