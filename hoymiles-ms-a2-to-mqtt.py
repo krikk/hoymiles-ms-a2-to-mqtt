@@ -8,7 +8,7 @@ import os
 import json
 import time
 from datetime import datetime
-
+from jsonpath_ng import parse
 
 
 # Function to load configuration variables from a file
@@ -76,7 +76,7 @@ def request_new_token():
     base64_hash = base64.b64encode(sha256_hash).decode('utf-8')
 
     # Combine the two parts to form the final string
-    final_string = f"{md5_hash}.{base64_hash}"
+    encoded_password = f"{md5_hash}.{base64_hash}"
 
     # Step 3: Send the first web request with the generated string
     url_login = "https://euapi.hoymiles.com/iam/pub/0/c/login_c"
@@ -84,12 +84,12 @@ def request_new_token():
 
     data_login = {
         "user_name": hoymiles_user,
-        "password": final_string
+        "password": encoded_password
     }
 
     # Send the POST request for login
     response_login = requests.post(url_login, json=data_login, headers=headers)
-
+    
     if response_login.status_code == 200:
         response_data = response_login.json()
         if response_data.get("status") == "0" and "data" in response_data:
@@ -99,7 +99,7 @@ def request_new_token():
                 save_token_to_config(token)
                 return token
         else:
-            debug_print(f"Login failed: {response_data.get('message')}")
+            debug_print(f"{response_data.get('message')}")
     else:
         debug_print(f"Failed to login. Status Code: {response_login.status_code}")
 
@@ -108,6 +108,7 @@ def request_new_token():
 def get_sid(token):
     # Use the token to send a request for the SID
     url_station = "https://neapi.hoymiles.com/pvmc/api/0/station/select_by_page_c"
+
     headers_with_auth = {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': token
@@ -118,14 +119,20 @@ def get_sid(token):
         "page_size": 50
     }
 
+
     response_station = requests.post(url_station, json=data_station, headers=headers_with_auth)
 
     if response_station.status_code == 200:
         station_data = response_station.json()
         debug_print(f"SID retrieved: {station_data}")
-        if station_data.get("status") == "0" and "data" in station_data:
-            sid = station_data["data"].get("list", [{}])[0].get("sid")
-            if sid:
+        
+        if station_data.get("status") == "0":
+            # Use JSONPath to extract the 'sid'
+            jsonpath_expr = parse('$.data.list[0].sid')
+            match = jsonpath_expr.find(station_data)
+            
+            if match:
+                sid = match[0].value
                 debug_print(f"SID retrieved: {sid}")
                 save_sid_to_config(sid)
                 return sid
@@ -140,6 +147,7 @@ def get_sid(token):
         debug_print(f"Failed to fetch station data. Status Code: {response_station.status_code}")
         token = request_new_token()
         return None
+
 
 def get_uri(token, sid):
     # Step 5: Use the token and sid to get the uri
@@ -192,7 +200,8 @@ def send_final_request(token, sid, uri):
 
             if response_final.status_code == 200:
                 final_data_response = response_final.json()
-                final_data_response_str = str(final_data_response).replace("'", '"')
+                # final_data_response_str = str(final_data_response).replace("'", '"')
+                final_data_response_str = final_data_response
                 debug_print(f"Final Data Response: {final_data_response_str}")
 
                 if final_data_response.get("status") == "0" and "data" in final_data_response:
