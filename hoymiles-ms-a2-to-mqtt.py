@@ -200,8 +200,8 @@ def send_final_request(token, sid, uri):
 
             if response_final.status_code == 200:
                 final_data_response = response_final.json()
-                # final_data_response_str = str(final_data_response).replace("'", '"')
-                final_data_response_str = final_data_response
+                final_data_response_str = str(final_data_response).replace("'", '"')
+                # final_data_response_str = final_data_response
                 debug_print(f"Final Data Response: {final_data_response_str}")
 
                 if final_data_response.get("status") == "0" and "data" in final_data_response:
