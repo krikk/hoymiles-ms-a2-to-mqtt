@@ -30,6 +30,7 @@ cd hoymiles-ms-a2-to-mqtt
 virtualenv -p python3 .venv
 . .venv/bin/activate
 pip3 install -r requirements.txt
+chmod a+x hoymiles-ms-a2-to-mqtt.py
 ```
 
 
