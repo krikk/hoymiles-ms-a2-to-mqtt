@@ -1,0 +1,25 @@
+meta {
+  name: get_sd_uri_c
+  type: http
+  seq: 4
+}
+
+post {
+  url: https://neapi.hoymiles.com/pvmc/api/0/station/get_sd_uri_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+  Authorization: {{token}}
+}
+
+body:json {
+  {"sid":{{sid}}}
+}
+
+script:post-response {
+  bru.setVar("uri", res.body.data.uri);
+  console.log(bru.getVar("uri"));
+}

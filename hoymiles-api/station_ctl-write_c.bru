@@ -1,0 +1,26 @@
+meta {
+  name: station_ctl-write_c
+  type: http
+  seq: 8
+}
+
+post {
+  url: https://neapi.hoymiles.com/pvmc/api/0/station_ctl/write_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+  Authorization: {{token}}
+}
+
+body:json {
+  {
+    "action": 1513,
+    "data": {
+      "power": 1000,
+      "sid": {{sid}}
+    }
+  }
+}

@@ -1,0 +1,25 @@
+meta {
+  name: station_ctl-read_c
+  type: http
+  seq: 6
+}
+
+post {
+  url: https://neapi.hoymiles.com/pvmc/api/0/station_ctl/read_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+  Authorization: {{token}}
+}
+
+body:json {
+  {"action":1513,"data":{"sid":{{sid}}}}
+}
+
+script:post-response {
+  bru.setVar("station-data", res.body.data);
+  console.log(bru.getVar("station-data"));
+}
