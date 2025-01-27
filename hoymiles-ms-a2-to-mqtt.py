@@ -5,11 +5,10 @@ import base64
 import requests
 import paho.mqtt.client as mqtt
 import os
-import json
+import json5
 import time
 from datetime import datetime
 from jsonpath_ng import parse
-
 
 # Function to load configuration variables from a file
 def load_config(config_file):
@@ -94,7 +93,7 @@ def request_new_token():
         # Check the response
         if response_login.status_code == 200:
             try:
-                response_data = response_login.json()
+                response_data = json5.loads(response_login.text)
                 if response_data.get("status") == "0" and "data" in response_data:
                     debug_print(f"Token Data Response: {response_data}")
                     token = response_data["data"].get("token")
@@ -120,7 +119,6 @@ def request_new_token():
 
     return token
 
-
 def get_sid(localtoken):
     try:
         # Use the token to send a request for the SID
@@ -140,7 +138,7 @@ def get_sid(localtoken):
 
         if response_station.status_code == 200:
             try:
-                station_data = response_station.json()
+                station_data = json5.loads(response_station.text)
                 debug_print(f"Station Data Response: {station_data}")
 
                 if station_data.get("status") == "0":
@@ -174,8 +172,6 @@ def get_sid(localtoken):
         debug_print(f"An unexpected error occurred: {e}")
         return None
 
-
-
 def get_uri(localtoken, localsid):
     try:
         # Step 5: Use the token and sid to get the uri
@@ -191,7 +187,7 @@ def get_uri(localtoken, localsid):
 
         if response_sd_uri.status_code == 200:
             try:
-                sd_uri_data = response_sd_uri.json()
+                sd_uri_data = json5.loads(response_sd_uri.text)
                 debug_print(f"SD URI Data Response: {sd_uri_data}")
 
                 if sd_uri_data.get("status") == "0" and "data" in sd_uri_data:
@@ -222,12 +218,9 @@ def get_uri(localtoken, localsid):
         debug_print(f"An unexpected error occurred: {e}")
         return None
 
-
 # Function to handle the final request logic
 def get_flow_data(flowtoken, flowsid, flowuri):
-
     # Step 6: Use the token and uri to send the fourth request
-
     final_data = {
         "m": 0,
         "sid": flowsid
@@ -236,7 +229,7 @@ def get_flow_data(flowtoken, flowsid, flowuri):
     response_final = requests.post(flowuri, json=final_data, headers={'Authorization': flowtoken})
 
     if response_final.status_code == 200:
-        final_data_response = response_final.json()
+        final_data_response = json5.loads(response_final.text)
         debug_print(f"Final Data Response: {final_data_response}")
 
         # Use JSONPath to extract values
@@ -260,8 +253,7 @@ def get_flow_data(flowtoken, flowsid, flowuri):
                     request_interval_seconds = 15
                 global uri
                 uri = None
-            else: 
-
+            else:
                 # Extract SOC
                 soc = [match.value for match in soc_expr.find(final_data_response)]
                 soc = soc[0] if soc else None
@@ -272,11 +264,12 @@ def get_flow_data(flowtoken, flowsid, flowuri):
 
                 if soc is not None and first_flow:
                     # Publish data to MQTT broker
-                    client = mqtt.Client()
+                    #client = mqtt.Client()
+                    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
                     client.username_pw_set(mqtt_user, mqtt_password)
 
                     client.connect(mqtt_broker, 1883, 60)
-                    client.publish(mqtt_topic, json.dumps(final_data_response))
+                    client.publish(mqtt_topic, json5.dumps(final_data_response))
 
                     i = first_flow.get("i")
                     o = first_flow.get("o")
@@ -284,7 +277,7 @@ def get_flow_data(flowtoken, flowsid, flowuri):
                     debug_print(f"i: {i} o: {o} v: {v}")
 
                     power_battery_topic = "hoymiles-ms-a2/power-battery"
-                    
+
                     battery_power = 0
                     if i == 20 and o == 40 and v is not None:
                         battery_power = v
@@ -305,7 +298,6 @@ def get_flow_data(flowtoken, flowsid, flowuri):
         debug_print(f"Failed to fetch final data. Status Code: {response_final.status_code}")
 
 # Main logic
-
 try:
     while True:
         # Log the start timestamp
@@ -314,10 +306,10 @@ try:
         if not token:
             debug_print("No token found. Requesting a new one.")
             token = request_new_token()
-        else: 
+        else:
             if not sid:
                 debug_print("No sid found. Requesting a new one.")
-                sid = get_sid (token)
+                sid = get_sid(token)
             else:
                 debug_print("SID loaded from config.")
 
@@ -335,14 +327,3 @@ try:
 
 except KeyboardInterrupt:
     debug_print("\nScript terminated by user (Ctrl+C). Exiting gracefully.")
-
-
-
-
-
-
-
-
-
-
-

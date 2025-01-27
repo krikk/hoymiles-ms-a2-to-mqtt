@@ -1,3 +1,4 @@
 requests
-paho-mqtt<2.0.0
+paho-mqtt
 jsonpath-ng
+json5
