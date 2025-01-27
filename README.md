@@ -9,7 +9,7 @@ Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery Sys
 - with  the token and the sid get the uri and cache it, sample response:
   - ```{'status': '0', 'message': 'success', 'data': {'uri': 'https://eurt.hoymiles.com/rds/api/0/burst/get?k=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&t=<UNIXTIMESTAMP>'}}```
 - with the Token and the uri we can get the JSON data (which will be directly published to mqtt) with the SOC and power values, as long as the uri is valid, sample response:
-  - ```{"status": "0", "data": {"flow": [{"i": 1, "o": 40, "v": 224.4}, {"i": 40, "o": 2, "v": 224.4}], "dly": 3000, "con": 1, "soc": 10.0, "power": {"pv": 0.0, "bat": 0.0, "grid": 224.4, "load": 224.4, "sp": 0.0}, "brs": 0, "bhs": 0, "ems": 0}}```
+  - ```{'status': '0', 'data': {'flow': [{'i': 40, 'o': 20, 'v': 245.8}, {'i': 1, 'o': 40, 'v': 252.0}, {'i': 40, 'o': 2, 'v': 6.2}, {'i': 20, 'o': 10, 'v': 245.8}], 'dly': 3000, 'con': 1, 'soc': 53.0, 'power': {'pv': 0.0, 'bat': 245.8, 'grid': 6.2, 'load': 252.0, 'sp': 0.0}, 'brs': 2, 'bhs': 0, 'ems': 0}}```
   - soc it the State of Charge of the battery, grid and load a current power values, flow gives load to/from battery
 
 ## TODO
