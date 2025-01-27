@@ -1,2 +1,2 @@
-# Bruno Hoymiles API
-use Bruno https://www.usebruno.com/ to test the hoymiles api
+# Hoymiles API
+use this basic [Bruno](https://www.usebruno.com/) Collection to test the hoymiles api
