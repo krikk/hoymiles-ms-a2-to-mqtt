@@ -200,6 +200,9 @@ def get_uri(localtoken, localsid):
                         return None
                 else:
                     debug_print(f"Failed to retrieve sd_uri data: {sd_uri_data.get('message')}")
+                    global token
+                    token = None
+                    debug_print("requesting new token...")
                     return None
             except ValueError as e:
                 debug_print(f"Error decoding JSON response: {e}")
