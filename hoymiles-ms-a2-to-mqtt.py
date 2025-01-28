@@ -280,6 +280,8 @@ def get_flow_data(flowtoken, flowsid, flowuri):
                     debug_print(f"i: {i} o: {o} v: {v}")
 
                     power_battery_topic = "hoymiles-ms-a2/power-battery"
+                    soc_topic = "hoymiles-ms-a2/soc"
+                    client.publish(soc_topic, soc)
 
                     battery_power = 0
                     if i == 20 and o == 40 and v is not None:
