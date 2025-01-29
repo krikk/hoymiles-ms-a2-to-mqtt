@@ -1,11 +1,11 @@
 meta {
-  name: burst_get
+  name: inverter-find_c
   type: http
-  seq: 6
+  seq: 4
 }
 
 post {
-  url: {{uri}}
+  url: https://neapi.hoymiles.com/pvmc/api/0/inverter/find_c
   body: json
   auth: none
 }
@@ -16,5 +16,5 @@ headers {
 }
 
 body:json {
-  {"m":0,"sid":{{sid}}}
+  {"id":{{id}},"sid":{{sid}}}
 }

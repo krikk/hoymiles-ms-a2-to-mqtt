@@ -1,0 +1,25 @@
+meta {
+  name: region_c
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://euapi.hoymiles.com/iam/pub/0/c/region_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+}
+
+body:json {
+  {"email":"{{hoymiles-username}}"}
+}
+
+script:post-response {
+  bru.setVar("login_url", res.body.data.login_url);
+  
+  console.log(bru.getVar("login_url"));
+}

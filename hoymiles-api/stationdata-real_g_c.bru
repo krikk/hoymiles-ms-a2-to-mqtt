@@ -1,0 +1,31 @@
+meta {
+  name: stationdata-real_g_c
+  type: http
+  seq: 10
+}
+
+post {
+  url: https://eud0.hoymiles.com/pvmc/api/0/station_data/real_g_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+  Authorization: {{token}}
+}
+
+body:json {
+  {"sid":{{sid}}}
+}
+
+script:post-response {
+  bru.setVar("bms_in_eq", res.body.data.reflux_station_data.bms_in_eq);
+  console.log(bru.getVar("bms_in_eq"));
+  
+  bru.setVar("bms_out_eq", res.body.data.reflux_station_data.bms_out_eq);
+  console.log(bru.getVar("bms_out_eq"));
+  
+  bru.setVar("station-data", res.body.data);
+  console.log(bru.getVar("station-data"));
+}
