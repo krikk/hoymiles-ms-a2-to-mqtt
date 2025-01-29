@@ -1,5 +1,5 @@
 meta {
-  name: station_ctl-setting_status_c
+  name: get on-grid input power
   type: http
   seq: 8
 }
@@ -17,4 +17,13 @@ headers {
 
 body:json {
   {"id":"{{station-data}}"}
+}
+
+script:post-response {
+  bru.setVar("on-grid-input-power", res.body.data.data.power);
+  console.log(bru.getVar("on-grid-input-power"));
+}
+
+docs {
+  get: settings - on-grid input power
 }

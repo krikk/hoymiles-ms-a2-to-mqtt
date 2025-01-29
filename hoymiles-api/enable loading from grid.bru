@@ -1,0 +1,28 @@
+meta {
+  name: enable loading from grid
+  type: http
+  seq: 10
+}
+
+post {
+  url: https://neapi.hoymiles.com/pvmc/api/0/station_ctl/write_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+  Authorization: {{token}}
+}
+
+body:json {
+  {
+    "action": 1503,
+    "data": {
+      "enable": 1,
+      "sid": {{sid}},
+      "target": 2,
+      "type": 1
+    }
+  }
+}

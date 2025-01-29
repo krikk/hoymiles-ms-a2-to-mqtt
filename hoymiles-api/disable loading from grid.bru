@@ -1,7 +1,7 @@
 meta {
-  name: station_ctl-write_c
+  name: disable loading from grid
   type: http
-  seq: 9
+  seq: 11
 }
 
 post {
@@ -17,9 +17,9 @@ headers {
 
 body:json {
   {
-    "action": 1513,
+    "action": 1503,
     "data": {
-      "power": 1000,
+      "enable": 0,
       "sid": {{sid}}
     }
   }

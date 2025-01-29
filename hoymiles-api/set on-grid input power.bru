@@ -1,0 +1,30 @@
+meta {
+  name: set on-grid input power
+  type: http
+  seq: 9
+}
+
+post {
+  url: https://neapi.hoymiles.com/pvmc/api/0/station_ctl/write_c
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json; charset=utf-8
+  Authorization: {{token}}
+}
+
+body:json {
+  {
+    "action": 1513,
+    "data": {
+      "power": 1000,
+      "sid": {{sid}}
+    }
+  }
+}
+
+docs {
+  set: : settings - on-grid input power
+}

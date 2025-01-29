@@ -1,5 +1,5 @@
 meta {
-  name: inverter-find_c
+  name: get inverter data and bms temp
   type: http
   seq: 4
 }
@@ -17,4 +17,12 @@ headers {
 
 body:json {
   {"id":{{id}},"sid":{{sid}}}
+}
+
+script:post-response {
+  bru.setVar("bms_temp", res.body.data.real_data.bms_temp);
+  
+  
+  console.log(bru.getVar("bms_temp"));
+  
 }
