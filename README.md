@@ -51,3 +51,16 @@ systemctl daemon-reload
 systemctl start hoymiles-ms-a2-to-mqtt
 systemctl enable hoymiles-ms-a2-to-mqtt
 ```
+## How to Sniff the App Traffic
+
+i used an android studio emulator with android 12... 
+
+then followed basically this guide: https://emanuele-f.github.io/PCAPdroid/tls_decryption#34-caveats-and-possible-solutions 
+
+1. add adb to path, to make the rootAVD script work
+2. ...used https://gitlab.com/newbit/rootAVD to root the emulator and install magisk
+3. in magisk i installed this module: https://github.com/NVISOsecurity/MagiskTrustUserCerts <- this adds user imported certs to system trust store... (same for newer android: https://github.com/pwnlogs/cert-fixer) 
+4. install PCAPdroid and install CA Certificate
+5. rebootet emulator (the magisk module only copies user the certificate to system store on boot)
+
+and afterwards TLS decryption with PCAPdroid works...
