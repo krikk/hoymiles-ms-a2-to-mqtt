@@ -37,6 +37,7 @@ mqtt_user = config.get("mqtt_user", "")
 mqtt_password = config.get("mqtt_password", "")
 mqtt_topic = config.get("mqtt_topic", "")
 token = config.get("token", None)
+login_url = config.get("login_url", None)
 sid = config.get("sid", None)
 uri = None
 debug = config.get("debug", "false").lower() == "true"  # Check if debug is enabled in config
@@ -47,6 +48,10 @@ try:
     request_interval_seconds = int(config.get("request_interval_seconds", request_interval_seconds))
 except ValueError:
     print(f"Invalid value for 'request_interval_seconds' in config, defaulting to {request_interval_seconds} seconds.")
+
+def save_login_url_to_config(login_url):
+    config["login_url"] = login_url
+    save_config(config_file, config)
 
 def save_token_to_config(token):
     config["token"] = token
@@ -78,9 +83,37 @@ def request_new_token():
         # Combine the two parts to form the final string
         encoded_password = f"{md5_hash}.{base64_hash}"
 
-        # Step 3: Send the first web request with the generated string
-        url_login = "https://euapi.hoymiles.com/iam/pub/0/c/login_c"
+        # get region for login
+
+        url_region = "https://euapi.hoymiles.com/iam/pub/0/c/region_c"
+        payload_region = { "email": hoymiles_user }
         headers = {'Content-Type': 'application/json; charset=utf-8'}
+
+        response_region = requests.post(url_region, json=payload_region, headers=headers)
+
+        if response_region.status_code == 200:
+            try:
+                response_region_data = json5.loads(response_region.text)
+                if response_region_data.get("status") == "0" and "data" in response_region_data:
+                    debug_print(f"Region Data Response: {response_region_data}")
+                    login_url = response_region_data["data"].get("login_url")
+                    if login_url:
+                        save_login_url_to_config(login_url)
+                else:
+                    debug_print(f"Error Message: {response_region_data.get('message')}")
+                    token = None
+            except ValueError as e:
+                debug_print(f"Error decoding JSON response: {e}")
+                token = None
+        else:
+            debug_print(f"Failed to get region. Status Code: {response_region.status_code}")
+            token = None
+
+
+        # Step 3: Send the first web request with the generated string
+        #get_token_url = "https://euapi.hoymiles.com/iam/pub/0/c/login_c"
+        get_token_url = login_url + "/iam/pub/0/c/login_c"
+
 
         data_login = {
             "user_name": hoymiles_user,
@@ -88,7 +121,7 @@ def request_new_token():
         }
 
         # Send the POST request for login
-        response_login = requests.post(url_login, json=data_login, headers=headers)
+        response_login = requests.post(get_token_url, json=data_login, headers=headers)
 
         # Check the response
         if response_login.status_code == 200:
@@ -311,12 +344,12 @@ try:
         if not token:
             debug_print("No token found. Requesting a new one.")
             token = request_new_token()
-        else:
-            if not sid:
-                debug_print("No sid found. Requesting a new one.")
-                sid = get_sid(token)
-            else:
-                debug_print("SID loaded from config.")
+        if token and not sid:
+            # if not sid:
+            debug_print("No sid found. Requesting a new one.")
+            sid = get_sid(token)
+            # else:
+            #     debug_print("SID loaded from config.")
 
         if token and sid:
             if not uri:
