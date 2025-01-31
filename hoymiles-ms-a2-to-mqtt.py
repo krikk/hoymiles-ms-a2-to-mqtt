@@ -256,84 +256,90 @@ def get_uri(localtoken, localsid):
 
 # Function to handle the final request logic
 def get_flow_data(flowtoken, flowsid, flowuri):
-    # Step 6: Use the token and uri to send the fourth request
-    final_data = {
-        "m": 0,
-        "sid": flowsid
-    }
+    try:
+        final_data = {"m": 0, "sid": flowsid}
+        headers = {'Authorization': flowtoken}
 
-    response_final = requests.post(flowuri, json=final_data, headers={'Authorization': flowtoken})
+        try:
+            response_final = requests.post(flowuri, json=final_data, headers=headers, timeout=10)
+            response_final.raise_for_status()  # Raise an error for 4xx/5xx responses
+        except requests.exceptions.RequestException as e:
+            debug_print(f"Request failed: {e}")
+            return
 
-    if response_final.status_code == 200:
-        final_data_response = json5.loads(response_final.text)
+        try:
+            final_data_response = json5.loads(response_final.text)
+        except (json5.JSONDecodeError, ValueError) as e:
+            debug_print(f"JSON decoding error: {e}")
+            return
+
         debug_print(f"Final Data Response: {final_data_response}")
 
-        # Use JSONPath to extract values
         status_expr = parse('$.status')
         dly_expr = parse('$.data.dly')
         soc_expr = parse('$.data.soc')
-        first_flow_expr = parse('$.data.flow[0]')  # Extract only the first block of $.data.flow
+        first_flow_expr = parse('$.data.flow[0]')
 
-        # Extract status
         status = [match.value for match in status_expr.find(final_data_response)]
-        if status and status[0] == "0":
-            # Extract delay
-            dly = [match.value for match in dly_expr.find(final_data_response)]
-            if dly and dly[0] == 10000:
-                debug_print("Received response with dly: 10000, requesting a new URI.")
-                global request_interval_seconds
-                if request_interval_seconds < (dly[0]/1000):
-                    request_interval_seconds = (dly[0]/1000)
-                    debug_print(f"new request_interval_seconds: {request_interval_seconds}")
-                else:
-                    request_interval_seconds = 15
-                global uri
-                uri = None
-            else:
-                # Extract SOC
-                soc = [match.value for match in soc_expr.find(final_data_response)]
-                soc = soc[0] if soc else None
+        if not status or status[0] != "0":
+            debug_print(f"Failed to retrieve final data: {final_data_response.get('message', 'Unknown error')}")
+            return
 
-                # Extract the first block of flow data
-                first_flow = [match.value for match in first_flow_expr.find(final_data_response)]
-                first_flow = first_flow[0] if first_flow else None
+        dly = [match.value for match in dly_expr.find(final_data_response)]
+        if dly and dly[0] == 10000:
+            debug_print("Received response with dly: 10000, requesting a new URI.")
+            #global request_interval_seconds
+            #request_interval_seconds = max(15, dly[0] / 1000)
+            #debug_print(f"new request_interval_seconds: {request_interval_seconds}")
+            global uri
+            uri = None
+            return
 
-                if soc is not None and first_flow:
-                    # Publish data to MQTT broker
-                    #client = mqtt.Client()
-                    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-                    client.username_pw_set(mqtt_user, mqtt_password)
+        soc = [match.value for match in soc_expr.find(final_data_response)]
+        soc = soc[0] if soc else None
 
-                    client.connect(mqtt_broker, 1883, 60)
-                    client.publish(mqtt_topic, json5.dumps(final_data_response))
+        first_flow = [match.value for match in first_flow_expr.find(final_data_response)]
+        first_flow = first_flow[0] if first_flow else None
 
-                    i = first_flow.get("i")
-                    o = first_flow.get("o")
-                    v = first_flow.get("v")
-                    debug_print(f"i: {i} o: {o} v: {v}")
+        if soc is None or not first_flow:
+            debug_print("SOC or flow data not found.")
+            return
 
-                    power_battery_topic = "hoymiles-ms-a2/power-battery"
-                    soc_topic = "hoymiles-ms-a2/soc"
-                    client.publish(soc_topic, soc)
+        # Publish data to MQTT broker
+        try:
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+            client.username_pw_set(mqtt_user, mqtt_password)
+            client.connect(mqtt_broker, 1883, 60)
 
-                    battery_power = 0
-                    if i == 20 and o == 40 and v is not None:
-                        battery_power = v
-                    elif i == 40 and o == 20 and v is not None:
-                        battery_power = -v
-                    client.publish(power_battery_topic, battery_power)
+            client.publish(mqtt_topic, json5.dumps(final_data_response))
 
-                    print(
-                        f"SOC retrieved: {soc}  | power-battery: {battery_power} "
-                    )
+            i = first_flow.get("i")
+            o = first_flow.get("o")
+            v = first_flow.get("v")
 
-                    client.disconnect()
-                else:
-                    debug_print("SOC not found.")
-        else:
-            debug_print(f"Failed to retrieve final data: {final_data_response.get('message')}")
-    else:
-        debug_print(f"Failed to fetch final data. Status Code: {response_final.status_code}")
+            debug_print(f"i: {i} o: {o} v: {v}")
+
+            power_battery_topic = "hoymiles-ms-a2/power-battery"
+            soc_topic = "hoymiles-ms-a2/soc"
+            client.publish(soc_topic, soc)
+
+            battery_power = 0
+            if i == 20 and o == 40 and v is not None:
+                battery_power = v
+            elif i == 40 and o == 20 and v is not None:
+                battery_power = -v
+
+            client.publish(power_battery_topic, battery_power)
+            debug_print(f"SOC retrieved: {soc}  | power-battery: {battery_power}")
+
+            client.disconnect()
+
+        except Exception as e:
+            debug_print(f"MQTT error: {e}")
+
+    except Exception as e:
+        debug_print(f"Unexpected error: {e}")
+
 
 # Main logic
 try:
