@@ -13,7 +13,7 @@ Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery Sys
   - soc it the State of Charge of the battery, grid and load a current power values, flow gives load to/from battery
 
 ## TODO
-- get more data
+- get more data e.g.: bms_temp, "bms_in_eq", "bms_out_eq" (today charge and discharge)
 - get rest of config paramters
 - set config parameters
 
