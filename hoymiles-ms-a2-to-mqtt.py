@@ -68,7 +68,9 @@ def save_sid_to_config(sid):
 # Function to print debug messages (if debug is enabled)
 def debug_print(message):
     if debug:
-        print(message)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        print(f"[{timestamp}] {message}")
+
 
 # Function to request a new token
 def request_new_token():
@@ -344,8 +346,6 @@ def get_flow_data(flowtoken, flowsid, flowuri):
 # Main logic
 try:
     while True:
-        # Log the start timestamp
-        debug_print(f"running at: {datetime.now().isoformat()}")
 
         if not token:
             debug_print("No token found. Requesting a new one.")
