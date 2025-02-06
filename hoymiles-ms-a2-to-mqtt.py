@@ -46,7 +46,8 @@ debug = config.get("debug", "false").lower() == "true"  # Check if debug is enab
 def debug_print(message):
     if debug:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        print(f"[{timestamp}] {message}")
+        #print(f"[{timestamp}] {message}")
+        print(f"{message}")
 
 
 # Initialize last station data fetch time
