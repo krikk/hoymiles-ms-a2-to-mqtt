@@ -40,7 +40,7 @@ chmod a+x hoymiles-ms-a2-to-mqtt.py
 ./hoymiles-ms-a2-to-mqtt.py
 ```
 
-#### Install as systemd service (untested)
+#### Install as systemd service
 Debian
 ```
 cp /opt/hoymiles-ms-a2-to-mqtt/hoymiles-ms-a2-to-mqtt.service /etc/systemd/system
