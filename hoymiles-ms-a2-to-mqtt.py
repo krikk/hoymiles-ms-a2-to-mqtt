@@ -42,19 +42,40 @@ sid = config.get("sid", None)
 uri = None
 debug = config.get("debug", "false").lower() == "true"  # Check if debug is enabled in config
 
+# Function to print debug messages (if debug is enabled)
+def debug_print(message):
+    if debug:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        print(f"[{timestamp}] {message}")
+
+
+# Initialize last station data fetch time
+last_station_data_time = 0
+
+
 # Load request interval with validation
 request_interval_seconds = 60  # Default value
 try:
     request_interval_seconds = int(config.get("request_interval_seconds", request_interval_seconds))
+    debug_print(f"Request Interval in Seconds: {request_interval_seconds}")
 except ValueError:
-    print(f"Invalid value for 'request_interval_seconds' in config, defaulting to {request_interval_seconds} seconds.")
+    debug_print(f"Invalid value for 'request_interval_seconds' in config, defaulting to {request_interval_seconds} seconds.")
+
+# Load station interval with validation
+station_data_interval = 300  # 5 minutes in seconds
+try:
+    station_data_interval = int(config.get("station_data_interval", station_data_interval))
+    debug_print(f"Station Data Interval in Seconds: {station_data_interval}")
+except ValueError:
+    debug_print(f"Invalid value for 'station_data_interval' in config, defaulting to {station_data_interval} seconds.")
+
 
 # Load port with validation
 mqtt_port = 1883  # Default value
 try:
     mqtt_port = int(config.get("mqtt_port", mqtt_port))
 except ValueError:
-    print(f"Invalid value for 'mqtt_port' in config, defaulting to {mqtt_port} seconds.")
+    debug_print(f"Invalid value for 'mqtt_port' in config, defaulting to {mqtt_port} seconds.")
 
 
 def save_login_url_to_config(login_url):
@@ -73,11 +94,6 @@ def save_sid_to_config(sid):
 #     config["uri"] = uri
 #     save_config(config_file, config)
 
-# Function to print debug messages (if debug is enabled)
-def debug_print(message):
-    if debug:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        print(f"[{timestamp}] {message}")
 
 
 # Function to request a new token
@@ -182,7 +198,7 @@ def get_sid(localtoken):
         if response_station.status_code == 200:
             try:
                 station_data = json5.loads(response_station.text)
-                debug_print(f"Station Data Response: {station_data}")
+                debug_print(f"Get Sid Response: {station_data}")
 
                 if station_data.get("status") == "0":
                     # Use JSONPath to extract the 'sid'
@@ -195,16 +211,16 @@ def get_sid(localtoken):
                         save_sid_to_config(localsid)
                         return localsid
                     else:
-                        debug_print("SID not found in station data response.")
+                        debug_print("SID not found in get sid response.")
                         return None
                 else:
-                    debug_print(f"Failed to retrieve station data: {station_data.get('message')}")
+                    debug_print(f"Failed to retrieve sid data: {station_data.get('message')}")
                     return None
             except ValueError as e:
                 debug_print(f"Error decoding JSON response: {e}")
                 return None
         else:
-            debug_print(f"Failed to fetch station data. Status Code: {response_station.status_code}")
+            debug_print(f"Failed to fetch sid data. Status Code: {response_station.status_code}")
             return None
 
     except requests.RequestException as e:
@@ -321,7 +337,8 @@ def get_flow_data(flowtoken, flowsid, flowuri):
             client.username_pw_set(mqtt_user, mqtt_password)
             client.connect(mqtt_broker, mqtt_port, 60)
 
-            client.publish(mqtt_topic, json5.dumps(final_data_response))
+            mqtt_topic_flow = mqtt_topic + "/flow"
+            client.publish(mqtt_topic_flow, json5.dumps(final_data_response))
 
             i = first_flow.get("i")
             o = first_flow.get("o")
@@ -329,8 +346,8 @@ def get_flow_data(flowtoken, flowsid, flowuri):
 
             debug_print(f"i: {i} o: {o} v: {v}")
 
-            power_battery_topic = "hoymiles-ms-a2/power-battery"
-            soc_topic = "hoymiles-ms-a2/soc"
+            power_battery_topic = mqtt_topic + "/power-battery"
+            soc_topic =  mqtt_topic + "/soc"
             client.publish(soc_topic, soc)
 
             battery_power = 0
@@ -351,29 +368,99 @@ def get_flow_data(flowtoken, flowsid, flowuri):
         debug_print(f"Unexpected error: {e}")
 
 
+
+
+# Function to handle the final request logic
+def get_station_data(stationtoken, stationsid):
+    try:
+        station_data = {"sid": stationsid}
+        headers = {'Authorization': stationtoken}
+        station_url = "https://eud0.hoymiles.com/pvmc/api/0/station_data/real_g_c"
+
+        try:
+            response_station = requests.post(station_url, json=station_data, headers=headers, timeout=10)
+            response_station.raise_for_status()  # Raise an error for 4xx/5xx responses
+        except requests.exceptions.RequestException as e:
+            debug_print(f"Request failed: {e}")
+            return
+
+        try:
+            station_data_response = json5.loads(response_station.text)
+        except (json5.JSONDecodeError, ValueError) as e:
+            debug_print(f"JSON decoding error: {e}")
+            return
+
+        debug_print(f"Station Data Response: {station_data_response}")
+
+        status_expr = parse('$.status')
+        bms_in_eq_expr = parse('$.data.reflux_station_data.bms_in_eq')
+        bms_out_eq_expr = parse('$.data.reflux_station_data.bms_out_eq')
+
+
+        status = [match.value for match in status_expr.find(station_data_response)]
+        if not status or status[0] != "0":
+            debug_print(f"Failed to retrieve station data: {station_data_response.get('message', 'Unknown error')}")
+            return
+
+        bms_in_eq = [match.value for match in bms_in_eq_expr.find(station_data_response)]
+        bms_in_eq = bms_in_eq[0] if bms_in_eq else None
+
+        bms_out_eq = [match.value for match in bms_out_eq_expr.find(station_data_response)]
+        bms_out_eq = bms_out_eq[0] if bms_out_eq else None
+
+
+        # Publish data to MQTT broker
+        try:
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+            client.username_pw_set(mqtt_user, mqtt_password)
+            client.connect(mqtt_broker, mqtt_port, 60)
+
+            mqtt_topic_station = mqtt_topic + "/station"
+            client.publish(mqtt_topic_station, json5.dumps(station_data_response))
+
+
+            debug_print(f"bms_in_eq retrieved: {bms_in_eq}  | bms_out_eq: {bms_out_eq}")
+
+            client.disconnect()
+
+        except Exception as e:
+            debug_print(f"MQTT error: {e}")
+
+    except Exception as e:
+        debug_print(f"Unexpected error: {e}")
+
+
+
+
+
+
+
 # Main logic
 try:
     while True:
-
+        current_time = time.time()
+        
         if not token:
             debug_print("No token found. Requesting a new one.")
             token = request_new_token()
         if token and not sid:
-            # if not sid:
             debug_print("No sid found. Requesting a new one.")
             sid = get_sid(token)
-            # else:
-            #     debug_print("SID loaded from config.")
-
+        
         if token and sid:
             if not uri:
                 debug_print("No uri found. Requesting a new one.")
                 uri = get_uri(token, sid)
             if uri:
-                debug_print("using cached uri.")
+                debug_print("Using cached uri.")
                 get_flow_data(token, sid, uri)
+                
+                # Call get_station_data every 5 minutes
+                if current_time - last_station_data_time >= station_data_interval:
+                    get_station_data(token, sid)
+                    last_station_data_time = current_time
             else:
-                debug_print("no uri, no final request!")
+                debug_print("No uri, no final request!")
 
         time.sleep(request_interval_seconds)
 
