@@ -2,18 +2,20 @@
 Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery System to MQTT Broker
 
 ## Features
-- Login to Hoymiles Cloud to get Token and cache it, sample response:
-  - ```{'status': '0', 'message': 'success', 'data': {'token': '2.xxxxxxxxxxxxxxxxxxxxxxx.1'}}```
-- with the Token get the sid and cache it, sample response:
-  - ```{'status': '0', 'message': 'success', 'data': {'page': 1, 'page_size': 50, 'total': 1, 'list': [{'sid': xxxx, 'sn': 'xxxx', 'name': 'xxxx-home', 'area_code': 'AT', 'classify': 10, 'devices': [{'id': 75460, 'sn': 'xxx', 'dtu_sn': 'xx', 'type': 1, 'warn_data': {'connect': True, 'warn': False}, 'extend_data': {'dfs': xx, 'inner': 1}, 'devices': [{'id': xx, 'sn': 'xx', 'dtu_sn': 'xx', 'type': 6, 'warn_data': {'connect': True, 'warn': False}, 'extend_data': {'role': 0}, 'devices': [{'id': xx, 'sn': 'xx', 'dtu_sn': 'xx', 'type': 16, 'warn_data': {'connect': True}, 'extend_data': {'name': 'ShellyPro3EM', 'type': 2, 'model': 'xxx'}, 'devices': []}]}]}], 'dc': 1, 'ak': 'xxxx', 'bt': 1}]}}```
-- with  the token and the sid get the uri and cache it, sample response:
-  - ```{'status': '0', 'message': 'success', 'data': {'uri': 'https://eurt.hoymiles.com/rds/api/0/burst/get?k=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&t=<UNIXTIMESTAMP>'}}```
-- with the Token and the uri we can get the JSON data (which will be directly published to mqtt) with the SOC and power values, as long as the uri is valid, sample response:
-  - ```{'status': '0', 'data': {'flow': [{'i': 40, 'o': 20, 'v': 245.8}, {'i': 1, 'o': 40, 'v': 252.0}, {'i': 40, 'o': 2, 'v': 6.2}, {'i': 20, 'o': 10, 'v': 245.8}], 'dly': 3000, 'con': 1, 'soc': 53.0, 'power': {'pv': 0.0, 'bat': 245.8, 'grid': 6.2, 'load': 252.0, 'sp': 0.0}, 'brs': 2, 'bhs': 0, 'ems': 0}}```
-  - soc it the State of Charge of the battery, grid and load a current power values, flow gives load to/from battery
+get the following data out from Hoymiles Clout and publish it to the MQTT Broker:
+- soc: State of Charge (to make i easier accessible, because SOC is also in the "raw" flow data)
+- power-battery:
+  - positive value: how much power (in Watt) is going to Battery
+  - negative value: how much power (in Watt) is discharged from Battery
+- flow: raw flow data, like we get it from the api
+  - Sample: ```{'status': '0', 'data': {'flow': [{'i': 40, 'o': 20, 'v': 245.8}, {'i': 1, 'o': 40, 'v': 252.0}, {'i': 40, 'o': 2, 'v': 6.2}, {'i': 20, 'o': 10, 'v': 245.8}], 'dly': 3000, 'con': 1, 'soc': 53.0, 'power': {'pv': 0.0, 'bat': 245.8, 'grid': 6.2, 'load': 252.0, 'sp': 0.0}, 'brs': 2, 'bhs': 0, 'ems': 0}}```
+- station: raw station data, like we get it from the api (this contains today charge and discharge values)
+  - Sample: ```{'status': '0', 'message': 'success', 'data': {'is_null': 0, 'today_eq': '1', 'month_eq': '20', 'year_eq': '104', 'total_eq': '125', 'real_power': '0', 'co2_emission_reduction': '124.625', 'plant_tree': '0', 'data_time': '2025-02-06 15:12:30', 'last_data_time': '2025-02-06 15:12:30', 'capacitor': '2', 'is_balance': 0, 'is_reflux': 1, 'reflux_station_data': {'start_date': '2025-02-06', 'end_date': '2025-02-06', 'pv_power': '0', 'grid_power': '0', 'load_power': '0', 'bms_power': '0', 'bms_soc': '10.0', 'inv_num': 1, 'meter_location': 2, 'pv_to_load_eq': '177', 'load_from_pv_eq': '177', 'meter_b_in_eq': '1159', 'meter_b_out_eq': '2', 'bms_in_eq': '285', 'bms_out_eq': '641', 'self_eq': '0', 'pv_eq_total': '0', 'use_eq_total': '0', 'flows': [], 'icon_pv': 0, 'icon_grid': 1, 'icon_load': 1, 'icon_bms': 1, 'icon_gen': 0, 'icon_pvi': 0, 'mb_in_eq': {'today_eq': '0', 'month_eq': '0', 'year_eq': '0', 'total_eq': '0'}, 'mb_out_eq': {'today_eq': '2', 'month_eq': '0', 'year_eq': '0', 'total_eq': '0'}, 'icon_plug': 0, 'icon_ai_plug': 0, 'cfg_load_power': 0}, 'clp': 0, 'efl_today_eq': None, 'efl_month_eq': None, 'efl_year_eq': None, 'efl_total_eq': None, 'electricity_price': 0.0, 'unit_code': '', 'unit': None, 'tou_mode': 2, 'is_load':0, 'warn_data': None}}```
+
+
 
 ## TODO
-- get more data e.g.: bms_temp, "bms_in_eq", "bms_out_eq" (today charge and discharge)
+- get more data e.g.: bms_temp
 - get rest of config paramters
 - set config parameters
 
