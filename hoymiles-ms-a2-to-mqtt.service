@@ -9,6 +9,7 @@ Type=simple
 WorkingDirectory=/opt/hoymiles-ms-a2-to-mqtt
 ExecStart=/opt/hoymiles-ms-a2-to-mqtt/.venv/bin/python /opt/hoymiles-ms-a2-to-mqtt/hoymiles-ms-a2-to-mqtt.py
 SyslogIdentifier=hoymiles-ms-a2-to-mqtt
+Environment=PYTHONUNBUFFERED=1
 RemainAfterExit=no
 Restart=always
 RestartSec=5s
