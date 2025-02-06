@@ -49,6 +49,14 @@ try:
 except ValueError:
     print(f"Invalid value for 'request_interval_seconds' in config, defaulting to {request_interval_seconds} seconds.")
 
+# Load port with validation
+mqtt_port = 1883  # Default value
+try:
+    mqtt_port = int(config.get("mqtt_port", mqtt_port))
+except ValueError:
+    print(f"Invalid value for 'mqtt_port' in config, defaulting to {mqtt_port} seconds.")
+
+
 def save_login_url_to_config(login_url):
     config["login_url"] = login_url
     save_config(config_file, config)
@@ -311,7 +319,7 @@ def get_flow_data(flowtoken, flowsid, flowuri):
         try:
             client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
             client.username_pw_set(mqtt_user, mqtt_password)
-            client.connect(mqtt_broker, 1883, 60)
+            client.connect(mqtt_broker, mqtt_port, 60)
 
             client.publish(mqtt_topic, json5.dumps(final_data_response))
 
