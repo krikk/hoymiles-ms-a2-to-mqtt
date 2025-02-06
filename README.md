@@ -52,6 +52,11 @@ systemctl daemon-reload
 systemctl start hoymiles-ms-a2-to-mqtt
 systemctl enable hoymiles-ms-a2-to-mqtt
 ```
+
+## Hoymiles API
+use this basic [Bruno](https://www.usebruno.com/) [Collection](https://github.com/krikk/hoymiles-ms-a2-to-mqtt/tree/main/hoymiles-api) to test the hoymiles api
+
+
 ## How to Sniff the App Traffic
 
 i used an android studio emulator with android 12... 
