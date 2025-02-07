@@ -4,7 +4,8 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-DynamicUser=yes
+#DynamicUser=yes
+User=USERNAME
 Type=simple
 WorkingDirectory=/opt/hoymiles-ms-a2-to-mqtt
 ExecStart=/opt/hoymiles-ms-a2-to-mqtt/.venv/bin/python /opt/hoymiles-ms-a2-to-mqtt/hoymiles-ms-a2-to-mqtt.py
