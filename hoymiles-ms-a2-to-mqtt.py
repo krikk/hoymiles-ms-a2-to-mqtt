@@ -39,13 +39,14 @@ mqtt_topic = config.get("mqtt_topic", "")
 token = config.get("token", None)
 login_url = config.get("login_url", None)
 sid = config.get("sid", None)
+inverterId = config.get("inverterId", None)
 uri = None
 debug = config.get("debug", "false").lower() == "true"  # Check if debug is enabled in config
 
 # Function to print debug messages (if debug is enabled)
 def debug_print(message):
     if debug:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        #timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         #print(f"[{timestamp}] {message}")
         print(f"{message}")
 
@@ -89,6 +90,10 @@ def save_token_to_config(token):
 
 def save_sid_to_config(sid):
     config["sid"] = sid
+    save_config(config_file, config)
+
+def save_inverterId_to_config(sid):
+    config["inverterId"] = inverterId
     save_config(config_file, config)
 
 # def save_uri_to_config(uri):
@@ -205,6 +210,18 @@ def get_sid(localtoken):
                     # Use JSONPath to extract the 'sid'
                     jsonpath_expr = parse('$.data.list[0].sid')
                     match = jsonpath_expr.find(station_data)
+
+                    jsonpath_Id = parse('$.data.list[0].devices[0].devices[0].id')
+                    matchId = jsonpath_Id.find(station_data)
+                    global inverterId
+                    if matchId:
+                        localId = matchId[0].value
+                        debug_print(f"ID retrieved: {localId}")
+                        inverterId = localId
+                        save_inverterId_to_config(inverterId)
+                    else:
+                        debug_print("ID not found in get sid response.")
+                        inverterId = None
 
                     if match:
                         localsid = match[0].value
@@ -369,8 +386,6 @@ def get_flow_data(flowtoken, flowsid, flowuri):
         debug_print(f"Unexpected error: {e}")
 
 
-
-
 # Function to handle the final request logic
 def get_station_data(stationtoken, stationsid):
     try:
@@ -431,8 +446,59 @@ def get_station_data(stationtoken, stationsid):
         debug_print(f"Unexpected error: {e}")
 
 
+# Function to handle the final request logic
+def get_inverter_data(inverterToken, inverterSid, inverterId):
+    try:
+        inverter_data = {"id": inverterId,"sid": inverterSid}
+        headers = {'Authorization': inverterToken}
+        inverter_url = "https://neapi.hoymiles.com/pvmc/api/0/inverter/find_c"
+
+        try:
+            inverter_response = requests.post(inverter_url, json=inverter_data, headers=headers, timeout=10)
+            inverter_response.raise_for_status()  # Raise an error for 4xx/5xx responses
+        except requests.exceptions.RequestException as e:
+            debug_print(f"Request failed: {e}")
+            return
+
+        try:
+            inverter_data_response = json5.loads(inverter_response.text)
+        except (json5.JSONDecodeError, ValueError) as e:
+            debug_print(f"JSON decoding error: {e}")
+            return
+
+        debug_print(f"Inverter Data Response: {inverter_data_response}")
+
+        status_expr = parse('$.status')
+        bms_temp_expr = parse('$.data.real_data.bms_temp')
 
 
+        status = [match.value for match in status_expr.find(inverter_data_response)]
+        if not status or status[0] != "0":
+            debug_print(f"Failed to retrieve inverter data: {inverter_data_response.get('message', 'Unknown error')}")
+            return
+
+        bms_temp = [match.value for match in bms_temp_expr.find(inverter_data_response)]
+        bms_temp = bms_temp[0] if bms_temp else None
+
+
+        # Publish data to MQTT broker
+        try:
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+            client.username_pw_set(mqtt_user, mqtt_password)
+            client.connect(mqtt_broker, mqtt_port, 60)
+
+            mqtt_topic_station = mqtt_topic + "/inverter"
+            client.publish(mqtt_topic_station, json5.dumps(inverter_data_response))
+
+            debug_print(f"bms_temp retrieved: {bms_temp}")
+
+            client.disconnect()
+
+        except Exception as e:
+            debug_print(f"MQTT error: {e}")
+
+    except Exception as e:
+        debug_print(f"Unexpected error: {e}")
 
 
 
@@ -459,6 +525,10 @@ try:
                 # Call get_station_data every 5 minutes
                 if current_time - last_station_data_time >= station_data_interval:
                     get_station_data(token, sid)
+                    if inverterId:
+                        get_inverter_data(token, sid, inverterId)
+                    else:
+                        debug_print("no inverterID")
                     last_station_data_time = current_time
             else:
                 debug_print("No uri, no final request!")
