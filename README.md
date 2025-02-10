@@ -53,6 +53,11 @@ systemctl start hoymiles-ms-a2-to-mqtt
 systemctl enable hoymiles-ms-a2-to-mqtt
 ```
 
+### How to get full debug logs:
+- stop the script
+- open the .config file and remove the lines with sid, token, id (everything except the needed login info)
+- start the script
+
 ## Hoymiles API
 use this basic [Bruno](https://www.usebruno.com/) [Collection](https://github.com/krikk/hoymiles-ms-a2-to-mqtt/tree/main/hoymiles-api) to test the hoymiles api
 
