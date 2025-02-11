@@ -64,7 +64,7 @@ except ValueError:
     debug_print(f"Invalid value for 'request_interval_seconds' in config, defaulting to {request_interval_seconds} seconds.")
 
 # Load station interval with validation
-station_data_interval = 300  # 5 minutes in seconds
+station_data_interval = 3600  # 1 hour in seconds
 try:
     station_data_interval = int(config.get("station_data_interval", station_data_interval))
     debug_print(f"Station Data Interval in Seconds: {station_data_interval}")
@@ -522,7 +522,7 @@ try:
                 debug_print("Using cached uri.")
                 get_flow_data(token, sid, uri)
                 
-                # Call get_station_data every 5 minutes
+                # Call get_station_data every 1 hour
                 if current_time - last_station_data_time >= station_data_interval:
                     get_station_data(token, sid)
                     if inverterId:
