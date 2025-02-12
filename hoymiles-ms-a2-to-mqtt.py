@@ -188,17 +188,11 @@ def get_sid(localtoken):
     try:
         # Use the token to send a request for the SID
         url_station = "https://neapi.hoymiles.com/pvmc/api/0/station/select_by_page_c"
-
         headers_with_auth = {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': localtoken
         }
-
-        data_station = {
-            "page": 1,
-            "page_size": 50
-        }
-
+        data_station = {"page": 1, "page_size": 50}
         response_station = requests.post(url_station, json=data_station, headers=headers_with_auth)
 
         if response_station.status_code == 200:
@@ -208,23 +202,26 @@ def get_sid(localtoken):
 
                 if station_data.get("status") == "0":
                     # Use JSONPath to extract the 'sid'
-                    jsonpath_expr = parse('$.data.list[0].sid')
-                    match = jsonpath_expr.find(station_data)
+                    jsonpath_sid = parse('$.data.list[0].sid')
+                    match_sid = jsonpath_sid.find(station_data)
 
-                    jsonpath_Id = parse('$.data.list[0].devices[0].devices[0].id')
-                    matchId = jsonpath_Id.find(station_data)
+                    jsonpath_devices = parse("$..devices[*]")
+                    devices = [match.value for match in jsonpath_devices.find(station_data)]
+                    
                     global inverterId
-                    if matchId:
-                        localId = matchId[0].value
-                        debug_print(f"ID retrieved: {localId}")
-                        inverterId = localId
+                    for device in devices:
+                        if device.get("type") == 6:
+                            inverterId = device.get("id")
+                            break
+                    
+                    if inverterId:
+                        debug_print(f"ID with type 6 retrieved: {inverterId}")
                         save_inverterId_to_config(inverterId)
                     else:
-                        debug_print("ID not found in get sid response.")
-                        inverterId = None
+                        debug_print("ID with type 6 not found in get sid response.")
 
-                    if match:
-                        localsid = match[0].value
+                    if match_sid:
+                        localsid = match_sid[0].value
                         debug_print(f"SID retrieved: {localsid}")
                         save_sid_to_config(localsid)
                         return localsid
@@ -244,7 +241,6 @@ def get_sid(localtoken):
     except requests.RequestException as e:
         debug_print(f"Request failed: {e}")
         return None
-
     except Exception as e:
         debug_print(f"An unexpected error occurred: {e}")
         return None
