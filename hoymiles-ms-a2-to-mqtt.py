@@ -100,6 +100,11 @@ def save_inverterId_to_config(sid):
 #     config["uri"] = uri
 #     save_config(config_file, config)
 
+# Initialize MQTT client once
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client.username_pw_set(mqtt_user, mqtt_password)
+mqtt_client.connect(mqtt_broker, mqtt_port, 60)
+
 def publish_mqtt(topic, payload):
     """
     Publishes data to the MQTT broker.
@@ -107,12 +112,8 @@ def publish_mqtt(topic, payload):
     :param payload: Data to publish (dict or primitive type)
     """
     try:
-        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        client.username_pw_set(mqtt_user, mqtt_password)
-        client.connect(mqtt_broker, mqtt_port, 60)
-        client.publish(topic, payload)
+        mqtt_client.publish(topic, payload)
         # debug_print(f"Published to {topic}: {payload}")
-        client.disconnect()
     except Exception as e:
         debug_print(f"MQTT error: {e}")
 
@@ -512,3 +513,4 @@ try:
 
 except KeyboardInterrupt:
     debug_print("\nScript terminated by user (Ctrl+C). Exiting gracefully.")
+    mqtt_client.disconnect()
