@@ -105,14 +105,14 @@ mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.username_pw_set(mqtt_user, mqtt_password)
 mqtt_client.connect(mqtt_broker, mqtt_port, 60)
 
-def publish_mqtt(topic, payload):
+def publish_mqtt(topic, payload, publishAsRetain=False):
     """
     Publishes data to the MQTT broker.
     :param topic: MQTT topic
     :param payload: Data to publish (dict or primitive type)
     """
     try:
-        mqtt_client.publish(topic, payload)
+        mqtt_client.publish(topic, payload, publishAsRetain)
         # debug_print(f"Published to {topic}: {payload}")
     except Exception as e:
         debug_print(f"MQTT error: {e}")
