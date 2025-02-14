@@ -100,6 +100,21 @@ def save_inverterId_to_config(sid):
 #     config["uri"] = uri
 #     save_config(config_file, config)
 
+def publish_mqtt(topic, payload):
+    """
+    Publishes data to the MQTT broker.
+    :param topic: MQTT topic
+    :param payload: Data to publish (dict or primitive type)
+    """
+    try:
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        client.username_pw_set(mqtt_user, mqtt_password)
+        client.connect(mqtt_broker, mqtt_port, 60)
+        client.publish(topic, payload)
+        # debug_print(f"Published to {topic}: {payload}")
+        client.disconnect()
+    except Exception as e:
+        debug_print(f"MQTT error: {e}")
 
 
 # Function to request a new token
@@ -345,38 +360,27 @@ def get_flow_data(flowtoken, flowsid, flowuri):
             debug_print("SOC or flow data not found.")
             return
 
-        # Publish data to MQTT broker
-        try:
-            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-            client.username_pw_set(mqtt_user, mqtt_password)
-            client.connect(mqtt_broker, mqtt_port, 60)
+        mqtt_topic_flow = mqtt_topic + "/flow"
+        publish_mqtt(mqtt_topic_flow, json5.dumps(final_data_response))
 
-            mqtt_topic_flow = mqtt_topic + "/flow"
-            client.publish(mqtt_topic_flow, json5.dumps(final_data_response))
+        i = first_flow.get("i")
+        o = first_flow.get("o")
+        v = first_flow.get("v")
 
-            i = first_flow.get("i")
-            o = first_flow.get("o")
-            v = first_flow.get("v")
+        debug_print(f"i: {i} o: {o} v: {v}")
 
-            debug_print(f"i: {i} o: {o} v: {v}")
+        power_battery_topic = mqtt_topic + "/power-battery"
+        soc_topic =  mqtt_topic + "/soc"
+        publish_mqtt(soc_topic, soc)
 
-            power_battery_topic = mqtt_topic + "/power-battery"
-            soc_topic =  mqtt_topic + "/soc"
-            client.publish(soc_topic, soc)
+        battery_power = 0
+        if i == 20 and o == 40 and v is not None:
+            battery_power = v
+        elif i == 40 and o == 20 and v is not None:
+            battery_power = -v
 
-            battery_power = 0
-            if i == 20 and o == 40 and v is not None:
-                battery_power = v
-            elif i == 40 and o == 20 and v is not None:
-                battery_power = -v
-
-            client.publish(power_battery_topic, battery_power)
-            debug_print(f"SOC retrieved: {soc}  | power-battery: {battery_power}")
-
-            client.disconnect()
-
-        except Exception as e:
-            debug_print(f"MQTT error: {e}")
+        publish_mqtt(power_battery_topic, battery_power)
+        debug_print(f"SOC retrieved: {soc}  | power-battery: {battery_power}")
 
     except Exception as e:
         debug_print(f"Unexpected error: {e}")
@@ -420,23 +424,10 @@ def get_station_data(stationtoken, stationsid):
         bms_out_eq = [match.value for match in bms_out_eq_expr.find(station_data_response)]
         bms_out_eq = bms_out_eq[0] if bms_out_eq else None
 
+        mqtt_topic_station = mqtt_topic + "/station"
+        publish_mqtt(mqtt_topic_station, json5.dumps(station_data_response))
 
-        # Publish data to MQTT broker
-        try:
-            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-            client.username_pw_set(mqtt_user, mqtt_password)
-            client.connect(mqtt_broker, mqtt_port, 60)
-
-            mqtt_topic_station = mqtt_topic + "/station"
-            client.publish(mqtt_topic_station, json5.dumps(station_data_response))
-
-
-            debug_print(f"bms_in_eq retrieved: {bms_in_eq}  | bms_out_eq: {bms_out_eq}")
-
-            client.disconnect()
-
-        except Exception as e:
-            debug_print(f"MQTT error: {e}")
+        debug_print(f"bms_in_eq retrieved: {bms_in_eq}  | bms_out_eq: {bms_out_eq}")
 
     except Exception as e:
         debug_print(f"Unexpected error: {e}")
@@ -476,22 +467,10 @@ def get_inverter_data(inverterToken, inverterSid, inverterId):
         bms_temp = [match.value for match in bms_temp_expr.find(inverter_data_response)]
         bms_temp = bms_temp[0] if bms_temp else None
 
+        mqtt_topic_station = mqtt_topic + "/inverter"
+        publish_mqtt(mqtt_topic_station, json5.dumps(inverter_data_response))
+        debug_print(f"bms_temp retrieved: {bms_temp}")
 
-        # Publish data to MQTT broker
-        try:
-            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-            client.username_pw_set(mqtt_user, mqtt_password)
-            client.connect(mqtt_broker, mqtt_port, 60)
-
-            mqtt_topic_station = mqtt_topic + "/inverter"
-            client.publish(mqtt_topic_station, json5.dumps(inverter_data_response))
-
-            debug_print(f"bms_temp retrieved: {bms_temp}")
-
-            client.disconnect()
-
-        except Exception as e:
-            debug_print(f"MQTT error: {e}")
 
     except Exception as e:
         debug_print(f"Unexpected error: {e}")
