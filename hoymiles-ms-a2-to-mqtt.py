@@ -477,15 +477,24 @@ def get_inverter_data(inverterToken, inverterSid, inverterId):
         debug_print(f"Unexpected error: {e}")
 
 
+def exponential_backoff(attempt):
+    return min(60, (2 ** attempt))
 
 # Main logic
 try:
+    token_request_attempts = 0
     while True:
         current_time = time.time()
         
         if not token:
             debug_print("No token found. Requesting a new one.")
             token = request_new_token()
+            if not token:
+                time.sleep(exponential_backoff(token_request_attempts))
+                token_request_attempts += 1
+            else:
+                token_request_attempts = 0
+
         if token and not sid:
             debug_print("No sid found. Requesting a new one.")
             sid = get_sid(token)
