@@ -5,7 +5,7 @@ import base64
 import requests
 import paho.mqtt.client as mqtt
 import os
-import json5
+import json
 import time
 from datetime import datetime
 from jsonpath_ng import parse
@@ -141,7 +141,7 @@ def request_new_token():
 
         if response_region.status_code == 200:
             try:
-                response_region_data = json5.loads(response_region.text)
+                response_region_data = json.loads(response_region.text)
                 if response_region_data.get("status") == "0" and "data" in response_region_data:
                     debug_print(f"Region Data Response: {response_region_data}")
                     login_url = response_region_data["data"].get("login_url")
@@ -174,7 +174,7 @@ def request_new_token():
         # Check the response
         if response_login.status_code == 200:
             try:
-                response_data = json5.loads(response_login.text)
+                response_data = json.loads(response_login.text)
                 if response_data.get("status") == "0" and "data" in response_data:
                     debug_print(f"Token Data Response: {response_data}")
                     token = response_data["data"].get("token")
@@ -213,7 +213,7 @@ def get_sid(localtoken):
 
         if response_station.status_code == 200:
             try:
-                station_data = json5.loads(response_station.text)
+                station_data = json.loads(response_station.text)
                 debug_print(f"Get Sid Response: {station_data}")
 
                 if station_data.get("status") == "0":
@@ -276,7 +276,7 @@ def get_uri(localtoken, localsid):
 
         if response_sd_uri.status_code == 200:
             try:
-                sd_uri_data = json5.loads(response_sd_uri.text)
+                sd_uri_data = json.loads(response_sd_uri.text)
                 debug_print(f"SD URI Data Response: {sd_uri_data}")
 
                 if sd_uri_data.get("status") == "0" and "data" in sd_uri_data:
@@ -324,8 +324,8 @@ def get_flow_data(flowtoken, flowsid, flowuri):
             return
 
         try:
-            final_data_response = json5.loads(response_final.text)
-        except (json5.JSONDecodeError, ValueError) as e:
+            final_data_response = json.loads(response_final.text)
+        except (json.JSONDecodeError, ValueError) as e:
             debug_print(f"JSON decoding error: {e}")
             return
 
@@ -362,7 +362,7 @@ def get_flow_data(flowtoken, flowsid, flowuri):
             return
 
         mqtt_topic_flow = mqtt_topic + "/flow"
-        publish_mqtt(mqtt_topic_flow, json5.dumps(final_data_response))
+        publish_mqtt(mqtt_topic_flow, json.dumps(final_data_response))
 
         i = first_flow.get("i")
         o = first_flow.get("o")
@@ -402,8 +402,8 @@ def get_station_data(stationtoken, stationsid):
             return
 
         try:
-            station_data_response = json5.loads(response_station.text)
-        except (json5.JSONDecodeError, ValueError) as e:
+            station_data_response = json.loads(response_station.text)
+        except (json.JSONDecodeError, ValueError) as e:
             debug_print(f"JSON decoding error: {e}")
             return
 
@@ -426,7 +426,7 @@ def get_station_data(stationtoken, stationsid):
         bms_out_eq = bms_out_eq[0] if bms_out_eq else None
 
         mqtt_topic_station = mqtt_topic + "/station"
-        publish_mqtt(mqtt_topic_station, json5.dumps(station_data_response))
+        publish_mqtt(mqtt_topic_station, json.dumps(station_data_response))
 
         debug_print(f"bms_in_eq retrieved: {bms_in_eq}  | bms_out_eq: {bms_out_eq}")
 
@@ -449,8 +449,8 @@ def get_inverter_data(inverterToken, inverterSid, inverterId):
             return
 
         try:
-            inverter_data_response = json5.loads(inverter_response.text)
-        except (json5.JSONDecodeError, ValueError) as e:
+            inverter_data_response = json.loads(inverter_response.text)
+        except (json.JSONDecodeError, ValueError) as e:
             debug_print(f"JSON decoding error: {e}")
             return
 
@@ -469,7 +469,7 @@ def get_inverter_data(inverterToken, inverterSid, inverterId):
         bms_temp = bms_temp[0] if bms_temp else None
 
         mqtt_topic_station = mqtt_topic + "/inverter"
-        publish_mqtt(mqtt_topic_station, json5.dumps(inverter_data_response))
+        publish_mqtt(mqtt_topic_station, json.dumps(inverter_data_response))
         debug_print(f"bms_temp retrieved: {bms_temp}")
 
 
