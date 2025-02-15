@@ -1,4 +1,4 @@
 requests
 paho-mqtt
 jsonpath-ng
-json5
+json
