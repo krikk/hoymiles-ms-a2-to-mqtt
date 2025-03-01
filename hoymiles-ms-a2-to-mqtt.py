@@ -104,6 +104,7 @@ def save_inverterId_to_config(sid):
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.username_pw_set(mqtt_user, mqtt_password)
 mqtt_client.connect(mqtt_broker, mqtt_port, 60)
+mqtt_client.loop_start()
 
 def publish_mqtt(topic, payload, publishAsRetain=False):
     """
@@ -523,3 +524,4 @@ try:
 except KeyboardInterrupt:
     debug_print("\nScript terminated by user (Ctrl+C). Exiting gracefully.")
     mqtt_client.disconnect()
+    mqtt_client.loop_stop()
