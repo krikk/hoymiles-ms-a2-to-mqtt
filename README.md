@@ -42,6 +42,9 @@ chmod a+x hoymiles-ms-a2-to-mqtt.py
 
 #### Install as systemd service
 Debian
+
+User=USERNAME in hoymiles-ms-a2-to-mqtt.service has to be changed.
+
 ```
 cp /opt/hoymiles-ms-a2-to-mqtt/hoymiles-ms-a2-to-mqtt.service /etc/systemd/system
 ```
