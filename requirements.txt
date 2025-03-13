@@ -1,3 +1,4 @@
 requests
 paho-mqtt
 jsonpath-ng
+typing_extensions
