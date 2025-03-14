@@ -16,8 +16,9 @@ get the following data out from Hoymiles Clout and publish it to the MQTT Broker
 
 
 ## TODO
+- Home Assistant Autodiscovery
 - get rest of config paramters
-- set config parameters
+- set config parameters (e.g. Force Load)
 
 ## Installation
 
