@@ -119,6 +119,68 @@ def publish_mqtt(topic, payload, publishAsRetain=False):
         debug_print(f"MQTT error: {e}")
 
 
+def publish_discovery():
+    """ Publishes Home Assistant MQTT Discovery messages for all sensors. """
+    discovery_prefix = "homeassistant"
+
+    # Define the sensors and their topics
+    sensors = {
+        "power-to-battery": {
+            "name": "Power to Battery",
+            "device_class": "power",
+            "unit_of_measurement": "W",
+            "state_topic": f"{mqtt_topic}/power-to-battery"
+        },
+        "power-from-battery": {
+            "name": "Power from Battery",
+            "device_class": "power",
+            "unit_of_measurement": "W",
+            "state_topic": f"{mqtt_topic}/power-from-battery"
+        },
+        # "bms-temperature": {
+        #     "name": "BMS Temperature",
+        #     "device_class": "temperature",
+        #     "unit_of_measurement": "°C",
+        #     "value_template":"{{ value_json.data.real_data.bms_temp}}",
+        #     "state_topic": f"{mqtt_topic}/inverter"
+        # },
+        "soc": {
+            "name": "Battery State of Charge",
+            "device_class": "battery",
+            "unit_of_measurement": "%",
+            "state_topic": f"{mqtt_topic}/soc"
+        }
+    }
+
+    # Device information
+    device_info = {
+        "identifiers": ["hoymiles-ms-a2"],
+        "manufacturer": "Hoymiles",
+        "model": "MS-A2",
+        "name": "Hoymiles MS-A2",
+        "sw_version": "1.0"
+    }
+
+    for sensor_id, sensor in sensors.items():
+        discovery_topic = f"{discovery_prefix}/sensor/hoymiles-ms-a2/{sensor_id}/config"
+        payload = {
+            "name": sensor["name"],
+            "unique_id": f"hoymiles_{sensor_id}",
+            "state_topic": sensor["state_topic"],
+            "device": device_info
+        }
+
+        if "unit_of_measurement" in sensor:
+            payload["unit_of_measurement"] = sensor["unit_of_measurement"]
+        if "device_class" in sensor:
+            payload["device_class"] = sensor["device_class"]
+        if "json_attributes_topic" in sensor:
+            payload["json_attributes_topic"] = sensor["json_attributes_topic"]
+
+        publish_mqtt(discovery_topic, json.dumps(payload), publishAsRetain=True)
+
+
+
 # Function to request a new token
 def request_new_token():
     try:
@@ -372,14 +434,20 @@ def get_flow_data(flowtoken, flowsid, flowuri):
         debug_print(f"i: {i} o: {o} v: {v}")
 
         power_battery_topic = mqtt_topic + "/power-battery"
+        power_to_battery_topic = mqtt_topic + "/power-to-battery"
+        power_from_battery_topic = mqtt_topic + "/power-from-battery"
         soc_topic =  mqtt_topic + "/soc"
         publish_mqtt(soc_topic, soc)
 
         battery_power = 0
         if i == 20 and o == 40 and v is not None:
             battery_power = v
+            publish_mqtt(power_to_battery_topic, v)
+            publish_mqtt(power_from_battery_topic, 0)
         elif i == 40 and o == 20 and v is not None:
             battery_power = -v
+            publish_mqtt(power_to_battery_topic, 0)
+            publish_mqtt(power_from_battery_topic, v)
 
         publish_mqtt(power_battery_topic, battery_power)
         debug_print(f"SOC retrieved: {soc}  | power-battery: {battery_power}")
@@ -484,6 +552,7 @@ def exponential_backoff(attempt):
 # Main logic
 try:
     token_request_attempts = 0
+    publish_discovery()
     while True:
         current_time = time.time()
         
@@ -506,6 +575,7 @@ try:
                 uri = get_uri(token, sid)
             if uri:
                 debug_print("Using cached uri.")
+
                 get_flow_data(token, sid, uri)
                 
                 # Call get_station_data every 1 hour
