@@ -30,18 +30,24 @@ def save_config(config_file, config):
 config_file = os.path.join(os.path.dirname(__file__), "hoymiles-ms-a2-to-mqtt.config")
 config = load_config(config_file)
 
-hoymiles_user = config.get("hoymiles_user", "")
-hoymiles_password = config.get("hoymiles_password", "")
-mqtt_broker = config.get("mqtt_broker", "")
-mqtt_user = config.get("mqtt_user", "")
-mqtt_password = config.get("mqtt_password", "")
-mqtt_topic = config.get("mqtt_topic", "")
-token = config.get("token", None)
-login_url = config.get("login_url", None)
-sid = config.get("sid", None)
-inverterId = config.get("inverterId", None)
-uri = None
-debug = config.get("debug", "false").lower() == "true"  # Check if debug is enabled in config
+def get_config_var(key, default=""):
+    return os.getenv(key, config.get(key, default))
+
+# Konfigurationen laden mit ENV-Fallback
+hoymiles_user     = get_config_var("hoymiles_user")
+hoymiles_password = get_config_var("hoymiles_password")
+mqtt_broker       = get_config_var("mqtt_broker")
+mqtt_user         = get_config_var("mqtt_user")
+mqtt_password     = get_config_var("mqtt_password")
+mqtt_topic        = get_config_var("mqtt_topic")
+token             = get_config_var("token", None)
+login_url         = get_config_var("login_url", None)
+sid               = get_config_var("sid", None)
+inverterId        = get_config_var("inverterId", None)
+uri               = None
+
+# Debug als bool auslesen
+debug = get_config_var("debug", "false").lower() == "true"
 
 # Function to print debug messages (if debug is enabled)
 def debug_print(message):

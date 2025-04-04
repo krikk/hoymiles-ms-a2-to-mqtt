@@ -1,0 +1,16 @@
+version: "3"
+services:
+  badboard_server:
+    image: holymiles-ms-a2-mqtt    
+    restart: always
+    environment:
+      - hoymiles_user=hoymiles-user@email.com
+      - hoymiles_password=HoymilesPassword
+      - mqtt_broker=192.168.1.23
+      - mqtt_user=mqtt-user
+      - mqtt_password=mqtt-password
+      - mqtt_topic=hoymiles-ms-a2
+      - mqtt_port=1883
+      - request_interval_seconds=15
+      - station_data_interval=3600
+      - debug=true
