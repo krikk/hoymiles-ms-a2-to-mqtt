@@ -22,8 +22,10 @@ get the following data out from Hoymiles Clout and publish it to the MQTT Broker
 
 ## Installation
 
-### Docker
+### docker-compose
 
+
+docker-compose.yml
 ```yml
 version: "3"
 services:
@@ -42,7 +44,7 @@ services:
       - STATION_DATA_INTERVAL=3601
       - DEBUG=true
 ```
-
+`sudo docker compose up -d`
 
 ### Debian
 

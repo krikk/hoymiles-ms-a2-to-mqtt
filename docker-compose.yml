@@ -12,5 +12,5 @@ services:
       - MQTT_TOPIC=hoymiles-ms-a2
       - MQTT_PORT=1883
       - REQUEST_INTERVAL_SECONDS=15
-      - STATION_DATA_INTERVAL=3601
+      - STATION_DATA_INTERVAL=3600
       - DEBUG=true
