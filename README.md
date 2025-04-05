@@ -22,6 +22,28 @@ get the following data out from Hoymiles Clout and publish it to the MQTT Broker
 
 ## Installation
 
+### Docker
+
+```yml
+version: "3"
+services:
+  badboard_server:
+    image: badsmoke/holymiles-ms-a2-mqtt    
+    restart: always
+    environment:
+      - HOYMILES_USER=hoymiles-user@email.com
+      - HOYMILES_PASSWORD=HoymilesPassword
+      - MQTT_BROKER=192.168.1.23
+      - MQTT_USER=mqtt-user
+      - MQTT_PASSWORD=mqtt-password
+      - MQTT_TOPIC=hoymiles-ms-a2
+      - MQTT_PORT=1883
+      - REQUEST_INTERVAL_SECONDS=15
+      - STATION_DATA_INTERVAL=3601
+      - DEBUG=true
+```
+
+
 ### Debian
 
 ```shell
