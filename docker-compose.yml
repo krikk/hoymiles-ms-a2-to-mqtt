@@ -1,7 +1,7 @@
 version: "3"
 services:
-  badboard_server:
-    image: holymiles-ms-a2-mqtt    
+  hoymiles-cloud-mqtt:
+    image: badsmoke/hoymiles-ms-a2-mqtt    
     restart: always
     environment:
       - HOYMILES_USER=hoymiles-user@email.com

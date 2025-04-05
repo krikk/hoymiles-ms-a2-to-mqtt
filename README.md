@@ -29,8 +29,8 @@ docker-compose.yml
 ```yml
 version: "3"
 services:
-  badboard_server:
-    image: badsmoke/holymiles-ms-a2-mqtt    
+  hoymiles-cloud-mqtt:
+    image: badsmoke/hoymiles-ms-a2-mqtt    
     restart: always
     environment:
       - HOYMILES_USER=hoymiles-user@email.com
@@ -41,7 +41,7 @@ services:
       - MQTT_TOPIC=hoymiles-ms-a2
       - MQTT_PORT=1883
       - REQUEST_INTERVAL_SECONDS=15
-      - STATION_DATA_INTERVAL=3601
+      - STATION_DATA_INTERVAL=3600
       - DEBUG=true
 ```
 `sudo docker compose up -d`
