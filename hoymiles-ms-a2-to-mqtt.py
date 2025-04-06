@@ -135,25 +135,45 @@ def publish_discovery():
         "power-to-battery": {
             "name": "Power to Battery",
             "device_class": "power",
+            "state_class": "MEASUREMENT",
             "unit_of_measurement": "W",
             "state_topic": f"{mqtt_topic}/power-to-battery"
         },
         "power-from-battery": {
             "name": "Power from Battery",
             "device_class": "power",
+            "state_class": "MEASUREMENT",
             "unit_of_measurement": "W",
             "state_topic": f"{mqtt_topic}/power-from-battery"
         },
-        # "bms-temperature": {
-        #     "name": "BMS Temperature",
-        #     "device_class": "temperature",
-        #     "unit_of_measurement": "°C",
-        #     "value_template":"{{ value_json.data.real_data.bms_temp}}",
-        #     "state_topic": f"{mqtt_topic}/inverter"
-        # },
+        "bms-temperature": {
+            "name": "BMS Temperature",
+            "device_class": "temperature",
+            "state_class": "MEASUREMENT",
+            "unit_of_measurement": "°C",
+            "value_template":"{{ value_json.data.real_data.bms_temp }}",
+            "state_topic": f"{mqtt_topic}/inverter"
+        },
+        "charge-today": {
+            "name": "Charge Today",
+            "device_class": "energy",
+            "state_class": "TOTAL_INCREASING",
+            "unit_of_measurement": "Wh",
+            "value_template": "{{ value_json.data.reflux_station_data.bms_in_eq }}",
+            "state_topic": f"{mqtt_topic}/station"
+        },
+        "discharge-today": {
+            "name": "Discharge Today",
+            "device_class": "energy",
+            "state_class": "TOTAL_INCREASING",
+            "unit_of_measurement": "Wh",
+            "value_template": "{{ value_json.data.reflux_station_data.bms_out_eq }}",
+            "state_topic": f"{mqtt_topic}/station"
+        },
         "soc": {
             "name": "Battery State of Charge",
             "device_class": "battery",
+            "state_class": "MEASUREMENT",
             "unit_of_measurement": "%",
             "state_topic": f"{mqtt_topic}/soc"
         }
@@ -181,8 +201,10 @@ def publish_discovery():
             payload["unit_of_measurement"] = sensor["unit_of_measurement"]
         if "device_class" in sensor:
             payload["device_class"] = sensor["device_class"]
-        if "json_attributes_topic" in sensor:
-            payload["json_attributes_topic"] = sensor["json_attributes_topic"]
+        if "state_class" in sensor:
+            payload["state_class"] = sensor["state_class"]
+        if "value_template" in sensor:
+            payload["value_template"] = sensor["value_template"]
 
         publish_mqtt(discovery_topic, json.dumps(payload), publishAsRetain=True)
 
