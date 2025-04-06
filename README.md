@@ -13,7 +13,7 @@ get the following data out from Hoymiles Clout and publish it to the MQTT Broker
   - Sample: ```{'status': '0', 'message': 'success', 'data': {'is_null': 0, 'today_eq': '1', 'month_eq': '20', 'year_eq': '104', 'total_eq': '125', 'real_power': '0', 'co2_emission_reduction': '124.625', 'plant_tree': '0', 'data_time': '2025-02-06 15:12:30', 'last_data_time': '2025-02-06 15:12:30', 'capacitor': '2', 'is_balance': 0, 'is_reflux': 1, 'reflux_station_data': {'start_date': '2025-02-06', 'end_date': '2025-02-06', 'pv_power': '0', 'grid_power': '0', 'load_power': '0', 'bms_power': '0', 'bms_soc': '10.0', 'inv_num': 1, 'meter_location': 2, 'pv_to_load_eq': '177', 'load_from_pv_eq': '177', 'meter_b_in_eq': '1159', 'meter_b_out_eq': '2', 'bms_in_eq': '285', 'bms_out_eq': '641', 'self_eq': '0', 'pv_eq_total': '0', 'use_eq_total': '0', 'flows': [], 'icon_pv': 0, 'icon_grid': 1, 'icon_load': 1, 'icon_bms': 1, 'icon_gen': 0, 'icon_pvi': 0, 'mb_in_eq': {'today_eq': '0', 'month_eq': '0', 'year_eq': '0', 'total_eq': '0'}, 'mb_out_eq': {'today_eq': '2', 'month_eq': '0', 'year_eq': '0', 'total_eq': '0'}, 'icon_plug': 0, 'icon_ai_plug': 0, 'cfg_load_power': 0}, 'clp': 0, 'efl_today_eq': None, 'efl_month_eq': None, 'efl_year_eq': None, 'efl_total_eq': None, 'electricity_price': 0.0, 'unit_code': '', 'unit': None, 'tou_mode': 2, 'is_load':0, 'warn_data': None}}```
 - raw inverter data, like we get it from the api (this contains bms_temp)
   - Sample: ```{'status': '0', 'message': 'success', 'data': {'id': 3423, 'sn': 'xxx', 'dtu_id': xxx, 'dtu_sn': 'xxx', 'dev_type': None, 'role': 0, 'create_by': 324344, 'create_at': '2024-12-19 20:20:03', 'update_by': 3424, 'update_at': '2024-12-19 20:20:03', 'soft_ver': None, 'hard_ver': None, 'dsp_sw': 10304, 'wifi_sw': 4870, 'bms_sw': 16846080, 'warn_data': {'connect': True, 'warn': False}, 'real_data': {'bms_soc': '10.0', 'bms_temp': '22.0', 'bms_state': 0}}}```
-- basic Home Assistant MQTT Autodiscovery (only for power/to/from battery and SoC)
+- Home Assistant MQTT Autodiscovery (power/to/from battery, SoC, temperature, todays charge/discharge)
 
 ## TODO
 - Full Home Assistant Autodiscovery
@@ -21,30 +21,6 @@ get the following data out from Hoymiles Clout and publish it to the MQTT Broker
 - set config parameters (e.g. Force Load)
 
 ## Installation
-
-### docker-compose
-
-
-docker-compose.yml
-```yml
-version: "3"
-services:
-  hoymiles-cloud-mqtt:
-    image: badsmoke/hoymiles-ms-a2-mqtt    
-    restart: unless-stopped
-    environment:
-      - HOYMILES_USER=hoymiles-user@email.com
-      - HOYMILES_PASSWORD=HoymilesPassword
-      - MQTT_BROKER=192.168.1.23
-      - MQTT_USER=mqtt-user
-      - MQTT_PASSWORD=mqtt-password
-      - MQTT_TOPIC=hoymiles-ms-a2
-      - MQTT_PORT=1883
-      - REQUEST_INTERVAL_SECONDS=15
-      - STATION_DATA_INTERVAL=3600
-      - DEBUG=true
-```
-`sudo docker compose up -d`
 
 ### Debian
 
@@ -80,6 +56,30 @@ systemctl daemon-reload
 systemctl start hoymiles-ms-a2-to-mqtt
 systemctl enable hoymiles-ms-a2-to-mqtt
 ```
+
+### docker-compose
+
+docker-compose.yml
+```yml
+version: "3"
+services:
+  hoymiles-cloud-mqtt:
+    image: badsmoke/hoymiles-ms-a2-mqtt    
+    restart: unless-stopped
+    environment:
+      - HOYMILES_USER=hoymiles-user@email.com
+      - HOYMILES_PASSWORD=HoymilesPassword
+      - MQTT_BROKER=192.168.1.23
+      - MQTT_USER=mqtt-user
+      - MQTT_PASSWORD=mqtt-password
+      - MQTT_TOPIC=hoymiles-ms-a2
+      - MQTT_PORT=1883
+      - REQUEST_INTERVAL_SECONDS=15
+      - STATION_DATA_INTERVAL=3600
+      - DEBUG=true
+```
+`sudo docker compose up -d`
+
 
 ### How to get full debug logs:
 - stop the script
