@@ -30,18 +30,25 @@ def save_config(config_file, config):
 config_file = os.path.join(os.path.dirname(__file__), "hoymiles-ms-a2-to-mqtt.config")
 config = load_config(config_file)
 
-hoymiles_user = config.get("hoymiles_user", "")
-hoymiles_password = config.get("hoymiles_password", "")
-mqtt_broker = config.get("mqtt_broker", "")
-mqtt_user = config.get("mqtt_user", "")
-mqtt_password = config.get("mqtt_password", "")
-mqtt_topic = config.get("mqtt_topic", "")
-token = config.get("token", None)
-login_url = config.get("login_url", None)
-sid = config.get("sid", None)
-inverterId = config.get("inverterId", None)
-uri = None
-debug = config.get("debug", "false").lower() == "true"  # Check if debug is enabled in config
+#get env vars, if nocht -> config file vars
+def get_config_var(key, default=""):
+    return os.getenv(key.upper(), config.get(key, default))
+
+# 
+hoymiles_user     = get_config_var("hoymiles_user")
+hoymiles_password = get_config_var("hoymiles_password")
+mqtt_broker       = get_config_var("mqtt_broker")
+mqtt_user         = get_config_var("mqtt_user")
+mqtt_password     = get_config_var("mqtt_password")
+mqtt_topic        = get_config_var("mqtt_topic")
+token             = get_config_var("token", None)
+login_url         = get_config_var("login_url", None)
+sid               = get_config_var("sid", None)
+inverterId        = get_config_var("inverterId", None)
+uri               = None
+
+# 
+debug = get_config_var("debug", "false").lower() == "true"
 
 # Function to print debug messages (if debug is enabled)
 def debug_print(message):
@@ -58,7 +65,7 @@ last_station_data_time = 0
 # Load request interval with validation
 request_interval_seconds = 60  # Default value
 try:
-    request_interval_seconds = int(config.get("request_interval_seconds", request_interval_seconds))
+    request_interval_seconds = int(get_config_var("request_interval_seconds", request_interval_seconds))
     debug_print(f"Request Interval in Seconds: {request_interval_seconds}")
 except ValueError:
     debug_print(f"Invalid value for 'request_interval_seconds' in config, defaulting to {request_interval_seconds} seconds.")
@@ -66,7 +73,7 @@ except ValueError:
 # Load station interval with validation
 station_data_interval = 3600  # 1 hour in seconds
 try:
-    station_data_interval = int(config.get("station_data_interval", station_data_interval))
+    station_data_interval = int(get_config_var("station_data_interval", station_data_interval))
     debug_print(f"Station Data Interval in Seconds: {station_data_interval}")
 except ValueError:
     debug_print(f"Invalid value for 'station_data_interval' in config, defaulting to {station_data_interval} seconds.")
@@ -75,7 +82,7 @@ except ValueError:
 # Load port with validation
 mqtt_port = 1883  # Default value
 try:
-    mqtt_port = int(config.get("mqtt_port", mqtt_port))
+    mqtt_port = int(get_config_var("mqtt_port", mqtt_port))
 except ValueError:
     debug_print(f"Invalid value for 'mqtt_port' in config, defaulting to {mqtt_port} seconds.")
 
