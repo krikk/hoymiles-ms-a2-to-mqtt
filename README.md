@@ -31,7 +31,7 @@ version: "3"
 services:
   hoymiles-cloud-mqtt:
     image: badsmoke/hoymiles-ms-a2-mqtt    
-    restart: always
+    restart: unless-stopped
     environment:
       - HOYMILES_USER=hoymiles-user@email.com
       - HOYMILES_PASSWORD=HoymilesPassword
