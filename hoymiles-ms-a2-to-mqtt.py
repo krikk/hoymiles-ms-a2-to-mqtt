@@ -120,7 +120,7 @@ def publish_mqtt(topic, payload, publishAsRetain=False):
     :param payload: Data to publish (dict or primitive type)
     """
     try:
-        mqtt_client.publish(topic, payload, publishAsRetain)
+        mqtt_client.publish(topic, payload, 0, publishAsRetain)
         # debug_print(f"Published to {topic}: {payload}")
     except Exception as e:
         debug_print(f"MQTT error: {e}")
@@ -206,7 +206,7 @@ def publish_discovery():
         if "value_template" in sensor:
             payload["value_template"] = sensor["value_template"]
 
-        publish_mqtt(discovery_topic, json.dumps(payload), publishAsRetain=True)
+        publish_mqtt(discovery_topic, json.dumps(payload), True)
 
 
 
