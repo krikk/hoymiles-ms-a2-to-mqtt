@@ -468,18 +468,25 @@ def get_flow_data(flowtoken, flowsid, flowuri):
         soc_topic =  mqtt_topic + "/soc"
         publish_mqtt(soc_topic, soc)
 
-        battery_power = 0
+        power_battery = 0
+        power_to_battery = 0
+        power_from_battery = 0
         if i == 20 and o == 40 and v is not None:
-            battery_power = v
-            publish_mqtt(power_to_battery_topic, v)
-            publish_mqtt(power_from_battery_topic, 0)
+            power_battery = v
+            power_to_battery = v
+            power_from_battery = 0
+            # publish_mqtt(power_to_battery_topic, v)
+            # publish_mqtt(power_from_battery_topic, 0)
         elif i == 40 and o == 20 and v is not None:
-            battery_power = -v
-            publish_mqtt(power_to_battery_topic, 0)
-            publish_mqtt(power_from_battery_topic, v)
-
-        publish_mqtt(power_battery_topic, battery_power)
-        debug_print(f"SOC retrieved: {soc}  | power-battery: {battery_power}")
+            power_battery = -v
+            power_to_battery = 0
+            power_from_battery = v
+            # publish_mqtt(power_to_battery_topic, 0)
+            # publish_mqtt(power_from_battery_topic, v)
+        publish_mqtt(power_to_battery_topic, power_to_battery)
+        publish_mqtt(power_from_battery_topic, power_from_battery)
+        publish_mqtt(power_battery_topic, power_battery)
+        debug_print(f"SOC retrieved: {soc}  | power-battery: {power_battery} | power-to-battery: {power_to_battery} | power-from-battery: {power_from_battery}")
 
     except Exception as e:
         debug_print(f"Unexpected error: {e}")
