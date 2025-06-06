@@ -1,6 +1,95 @@
 # hoymiles-ms-a2-to-mqtt
 Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery System to MQTT Broker
 
+**-> Hoymiles released the MQTT Update, the Hoymiles MS-A2 can now directly connect to a MQTT Broker, so this script is no longer needed!!!**
+
+## configuration.yaml for Home Assistent for the new MQTT-Data:
+
+```
+mqtt:
+  sensor:
+  - name: "State of Charge"
+    unique_id: hoymiles_msa2_soc
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/quick/state"
+    value_template: "{{ value_json.soc | float(1) }}"
+    unit_of_measurement: "%"
+    device_class: battery
+    state_class: measurement
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
+  - name: "Batterie Temperatur"
+    unique_id: hoymiles_msa2_batterie_temperatur
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/device/state"
+    value_template: "{{ value_json.bat_temp }}"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
+  - name: "Charge Today"
+    unique_id: hoymiles_msa2_charge_today
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/system/state"
+    value_template: "{{ value_json.chg_e }}"
+    unit_of_measurement: "Wh"
+    device_class: energy
+    state_class: total_increasing
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
+  - name: "Discharge Today"
+    unique_id: hoymiles_msa2_discharge_today
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/system/state"
+    value_template: "{{ value_json.dchg_e }}"
+    unit_of_measurement: "Wh"
+    device_class: energy
+    state_class: total_increasing
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
+  - name: "Power from(+)/to(-) Battery"
+    unique_id: hoymiles_msa2_power_to_from_battery
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/quick/state"
+    value_template: "{{ value_json.bat_p }}"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
+  - name: "Battery State"
+    unique_id: hoymiles_msa2_state
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/quick/state"
+    value_template: "{{ value_json.bat_sts }}"
+    device_class: enum
+    options:
+      - discharge
+      - charge
+      - standby
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
+```
+
 ## Features
 get the following data out from Hoymiles Clout and publish it to the MQTT Broker:
 - soc: State of Charge (to make i easier accessible, because SOC is also in the "raw" flow data)
