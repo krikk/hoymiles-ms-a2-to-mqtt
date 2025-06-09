@@ -64,6 +64,8 @@ mqtt:
     unique_id: hoymiles_msa2_power_to_from_battery
     state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/quick/state"
     value_template: "{{ value_json.bat_p }}"
+# use this to invert the value which seems more logical for me
+#    value_template: "{{ -1 * (value_json.bat_p | float(0)) }}"
     unit_of_measurement: "W"
     device_class: power
     state_class: measurement
