@@ -76,6 +76,20 @@ mqtt:
       manufacturer: "Hoymiles"
       model: "MS-A2"
 
+  - name: "RSSI"
+    unique_id: hoymiles_msa2_rssi
+    state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/device/state"
+    value_template: "{{ value_json.rssi }}"
+    unit_of_measurement: "dBm"
+    device_class: signal_strength
+    entity_category: diagnostic
+    state_class: measurement
+    device:
+      name: "MSA-2XXXXXXXXXXX"
+      identifiers: "2XXXXXXXXXXX"
+      manufacturer: "Hoymiles"
+      model: "MS-A2"
+
   - name: "Battery State"
     unique_id: hoymiles_msa2_state
     state_topic: "homeassistant/sensor/MSA-2XXXXXXXXXXX/quick/state"
