@@ -2,6 +2,7 @@
 Python Script to get Data from Hoymiles Cloud for the Hoymiles MS A2 Battery System to MQTT Broker
 
 **-> Hoymiles released the MQTT Update, the Hoymiles MS-A2 can now directly connect to a MQTT Broker, so this script is no longer needed!!!**
+the configuration.yaml below are the settings needed in Home Assistant to consume the most important data provided by the Hoymiles MS A2 via MQTT (since it only provides soc and bat_p via Autodiscovery)
 
 ## configuration.yaml for Home Assistent for the new MQTT-Data:
 
